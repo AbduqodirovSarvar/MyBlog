@@ -22,7 +22,7 @@ public sealed class JwtTokenServiceTests
 
     private static readonly AuthUser User = new(
         Guid.CreateVersion7(), "ali@example.com", "ali", true, false,
-        [Roles.Admin, Roles.User], [Permissions.Posts.Manage, Permissions.Users.View]);
+        [Roles.Admin, Roles.User], [Permissions.Posts.Manage, Permissions.Users.View], SessionVersions.From("stamp-1"));
 
     private static JwtTokenService CreateService(DateTimeOffset now)
     {
@@ -47,7 +47,7 @@ public sealed class JwtTokenServiceTests
         identity.FindFirst("email")!.Value.ShouldBe("ali@example.com");
         identity.FindFirst("unique_name")!.Value.ShouldBe("ali");
         identity.FindFirst("jti")!.Value.ShouldNotBeNullOrEmpty();
-        identity.FindAll("role").Select(c => c.Value).ShouldBe([Roles.Admin, Roles.User], ignoreOrder: true);
+        identity.FindFirst("sv")!.Value.ShouldBe(SessionVersions.From("stamp-1"));        identity.FindAll("role").Select(c => c.Value).ShouldBe([Roles.Admin, Roles.User], ignoreOrder: true);
         identity.FindAll(Permissions.ClaimType).Select(c => c.Value)
             .ShouldBe([Permissions.Posts.Manage, Permissions.Users.View], ignoreOrder: true);
 

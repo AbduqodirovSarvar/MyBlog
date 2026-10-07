@@ -24,7 +24,10 @@ internal sealed class ChangePasswordCommandValidator : AbstractValidator<ChangeP
     }
 }
 
-/// <summary>Parol o'zgargach barcha sessiyalar bekor qilinadi va joriy qurilma uchun yangi juftlik qaytadi.</summary>
+/// <summary>
+/// Parol o'zgargach barcha sessiyalar bekor qilinadi (security stamp ham yangilanadi — eski access token'lar ishlamaydi)
+/// va joriy qurilma uchun yangi juftlik qaytadi.
+/// </summary>
 internal sealed class ChangePasswordCommandHandler(
     ICurrentUser currentUser,
     IIdentityService identityService,
@@ -46,6 +49,11 @@ internal sealed class ChangePasswordCommandHandler(
         await refreshTokenService.RevokeAllForUserAsync(user.Id, RefreshTokenRevokeReasons.PasswordChanged, cancellationToken);
         await emailService.SendPasswordChangedAsync(user, cancellationToken);
 
-        return await sessionIssuer.IssueAsync(user, cancellationToken);
+        // Security stamp o'zgardi: yangi token yangilangan stamp bilan chiqishi uchun foydalanuvchi qayta o'qiladi.
+        var refreshed = await identityService.FindByIdAsync(user.Id, cancellationToken);
+        if (refreshed is null)
+            return AuthErrors.SessionInvalid;
+
+        return await sessionIssuer.IssueAsync(refreshed, cancellationToken);
     }
 }

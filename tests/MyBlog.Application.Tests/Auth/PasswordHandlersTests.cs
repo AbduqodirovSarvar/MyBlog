@@ -161,4 +161,22 @@ public sealed class ChangePasswordCommandHandlerTests
             _ctx.RefreshTokens.IssueAsync(user.Id, Arg.Any<CancellationToken>());
         });
     }
+
+    [Fact]
+    public async Task New_access_token_carries_the_updated_session_version()
+    {
+        var user = AuthTestContext.User();
+        var refreshed = user with { SessionVersion = "session-v2" };
+        _ctx.SignIn(user.Id);
+        _ctx.Identity.FindByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user, refreshed);
+        _ctx.Identity.ChangePasswordAsync(user.Id, "OldSecret1", "NewSecret1", Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(Result.Success()));
+        var handler = new ChangePasswordCommandHandler(_ctx.CurrentUser, _ctx.Identity, _ctx.RefreshTokens,
+            _ctx.SessionIssuer, _ctx.EmailService);
+
+        (await handler.Handle(new ChangePasswordCommand("OldSecret1", "NewSecret1", "NewSecret1"),
+            TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
+
+        _ctx.Tokens.Received(1).CreateAccessToken(Arg.Is<AuthUser>(u => u.SessionVersion == "session-v2"));
+    }
 }

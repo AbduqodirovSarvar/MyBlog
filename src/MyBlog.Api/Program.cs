@@ -1,5 +1,6 @@
 using MyBlog.Api;
 using MyBlog.Api.Endpoints;
+using MyBlog.Api.Infrastructure;
 using MyBlog.Application;
 using MyBlog.Infrastructure;
 using MyBlog.Infrastructure.Persistence;
@@ -22,6 +23,8 @@ var app = builder.Build();
 
 await app.Services.InitializeDatabaseAsync();
 
+// Birinchi middleware: keyingilari (log, HSTS, rate limiter) mijozning haqiqiy IP/sxemasini ko'radi.
+app.UseReverseProxySupport();
 app.UseExceptionHandler();
 
 if (!app.Environment.IsDevelopment())

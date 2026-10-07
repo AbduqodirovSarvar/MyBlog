@@ -29,13 +29,18 @@ internal sealed class LogoutCommandHandler(IRefreshTokenService refreshTokenServ
     }
 }
 
-internal sealed class LogoutAllCommandHandler(IRefreshTokenService refreshTokenService, ICurrentUser currentUser)
-    : ICommandHandler<LogoutAllCommand>
+internal sealed class LogoutAllCommandHandler(
+    IRefreshTokenService refreshTokenService,
+    IIdentityService identityService,
+    ICurrentUser currentUser) : ICommandHandler<LogoutAllCommand>
 {
     public async Task<Result> Handle(LogoutAllCommand request, CancellationToken cancellationToken)
     {
-        await refreshTokenService.RevokeAllForUserAsync(currentUser.RequiredId, RefreshTokenRevokeReasons.LogoutAll,
-            cancellationToken);
-        return Result.Success();
+        var userId = currentUser.RequiredId;
+        await refreshTokenService.RevokeAllForUserAsync(userId, RefreshTokenRevokeReasons.LogoutAll, cancellationToken);
+
+        // Security stamp yangilanadi — mavjud access token'lar ham darhol yaroqsiz bo'ladi.
+        var invalidated = await identityService.InvalidateSessionsAsync(userId, cancellationToken);
+        return invalidated.IsFailure ? AuthErrors.SessionInvalid : Result.Success();
     }
 }

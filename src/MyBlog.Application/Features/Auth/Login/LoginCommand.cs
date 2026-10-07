@@ -24,43 +24,37 @@ internal sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
 }
 
 /// <summary>
-/// Xatolar: noto'g'ri login/parol (umumiy), lockout (daqiqalar bilan), bloklangan, email tasdiqlanmagan.
-/// Bloklangan/tasdiqlanmagan holat faqat parol to'g'ri bo'lganda oshkor qilinadi.
+/// Xatolar: noto'g'ri login/parol (umumiy), bloklangan, email tasdiqlanmagan. Parol noto'g'ri bo'lsa holatdan qat'i nazar
+/// faqat umumiy xato qaytadi; bloklangan/tasdiqlanmagan holat faqat to'g'ri paroldan keyin aytiladi.
+/// Lockout ham umumiy xato bilan javob beradi: aks holda lockout paytida "to'g'ri parol" signali parol terishni
+/// cheklovsiz davom ettirishga imkon beradi va mavjud akkauntlarni aniqlash mumkin bo'ladi.
 /// </summary>
 internal sealed class LoginCommandHandler(
     IIdentityService identityService,
-    AuthSessionIssuer sessionIssuer,
-    TimeProvider timeProvider) : ICommandHandler<LoginCommand, AuthResponse>
+    AuthSessionIssuer sessionIssuer) : ICommandHandler<LoginCommand, AuthResponse>
 {
     public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await identityService.FindByEmailOrUserNameAsync(request.EmailOrUserName.Trim(), cancellationToken);
-        if (user is null)
-            return AuthErrors.InvalidCredentials;
-
-        var check = await identityService.CheckPasswordAsync(user.Id, request.Password, cancellationToken);
+        var check = await identityService.CheckCredentialsAsync(request.EmailOrUserName.Trim(), request.Password,
+            cancellationToken);
         switch (check.Status)
         {
-            case PasswordCheckStatus.InvalidPassword:
-                return AuthErrors.InvalidCredentials;
-            case PasswordCheckStatus.LockedOut:
-                return AuthErrors.LockedOutFor(MinutesUntil(check.LockoutEnd));
+            case PasswordCheckStatus.Success when check.UserId is not null:
+                break;
             case PasswordCheckStatus.Blocked:
                 return AuthErrors.UserBlocked;
             case PasswordCheckStatus.EmailNotConfirmed:
                 return AuthErrors.EmailNotConfirmed;
+            default:
+                return AuthErrors.InvalidCredentials;
         }
+
+        // Rollar/ruxsatlar va security stamp tekshiruvdan keyin o'qiladi (token eng so'nggi stamp bilan chiqadi).
+        var user = await identityService.FindByIdAsync(check.UserId.Value, cancellationToken);
+        if (user is null)
+            return AuthErrors.InvalidCredentials;
 
         await identityService.UpdateLastLoginAsync(user.Id, cancellationToken);
         return await sessionIssuer.IssueAsync(user, cancellationToken);
-    }
-
-    private int MinutesUntil(DateTimeOffset? lockoutEnd)
-    {
-        if (lockoutEnd is null)
-            return 1;
-
-        var remaining = lockoutEnd.Value - timeProvider.GetUtcNow();
-        return Math.Max(1, (int)Math.Ceiling(remaining.TotalMinutes));
     }
 }

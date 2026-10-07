@@ -1,6 +1,10 @@
 namespace MyBlog.Application.Abstractions.Identity;
 
 /// <summary>Identity foydalanuvchisi (Identity tiplarisiz). Rollar va ruxsatlar bazadan o'qiladi.</summary>
+/// <param name="SessionVersion">
+/// Security stamp'dan olingan shaffof qiymat (xom stamp emas). Access token'ga yoziladi; stamp o'zgarsa
+/// (bloklash, parol, rol, logout-all) eski token'lar keyingi so'rovdayoq rad etiladi.
+/// </param>
 public sealed record AuthUser(
     Guid Id,
     string Email,
@@ -8,7 +12,8 @@ public sealed record AuthUser(
     bool EmailConfirmed,
     bool IsBlocked,
     IReadOnlyList<string> Roles,
-    IReadOnlyList<string> Permissions);
+    IReadOnlyList<string> Permissions,
+    string SessionVersion);
 
 public enum PasswordCheckStatus
 {
@@ -19,10 +24,10 @@ public enum PasswordCheckStatus
     Blocked = 4
 }
 
-/// <param name="LockoutEnd">Faqat <see cref="PasswordCheckStatus.LockedOut"/> bo'lganda.</param>
-public sealed record PasswordCheckResult(PasswordCheckStatus Status, DateTimeOffset? LockoutEnd = null)
+/// <param name="UserId">Faqat <see cref="PasswordCheckStatus.Success"/> bo'lganda.</param>
+public sealed record PasswordCheckResult(PasswordCheckStatus Status, Guid? UserId = null)
 {
-    public static readonly PasswordCheckResult Success = new(PasswordCheckStatus.Success);
+    public static PasswordCheckResult Succeeded(Guid userId) => new(PasswordCheckStatus.Success, userId);
 }
 
 public sealed record AccessToken(string Token, DateTimeOffset ExpiresAt);

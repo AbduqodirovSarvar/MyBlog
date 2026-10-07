@@ -14,50 +14,41 @@ public sealed class LoginCommandHandlerTests
     private readonly AuthTestContext _ctx = new();
     private readonly AuthUser _user = AuthTestContext.User();
 
-    private LoginCommandHandler CreateHandler() => new(_ctx.Identity, _ctx.SessionIssuer, _ctx.Time);
+    private LoginCommandHandler CreateHandler() => new(_ctx.Identity, _ctx.SessionIssuer);
 
-    private void ArrangeUser(PasswordCheckResult check)
+    private void ArrangeCheck(PasswordCheckResult check)
     {
-        _ctx.Identity.FindByEmailOrUserNameAsync("ali", Arg.Any<CancellationToken>()).Returns(_user);
-        _ctx.Identity.CheckPasswordAsync(_user.Id, "Secret123", Arg.Any<CancellationToken>()).Returns(check);
+        _ctx.Identity.CheckCredentialsAsync("ali", "Secret123", Arg.Any<CancellationToken>()).Returns(check);
+        _ctx.Identity.FindByIdAsync(_user.Id, Arg.Any<CancellationToken>()).Returns(_user);
     }
 
     private Task<MyBlog.Domain.Common.Result<AuthResponse>> LoginAsync() =>
         CreateHandler().Handle(new LoginCommand(" ali ", "Secret123"), TestContext.Current.CancellationToken);
 
     [Fact]
-    public async Task Unknown_user_gets_generic_invalid_credentials()
+    public async Task Unknown_user_gets_same_generic_error_as_wrong_password()
     {
-        var result = await LoginAsync();
+        // Infrastructure topilmagan foydalanuvchi uchun ham InvalidPassword qaytaradi (soxta xesh tekshiruvidan keyin).
+        ArrangeCheck(new PasswordCheckResult(PasswordCheckStatus.InvalidPassword));
 
-        result.Error.ShouldBe(AuthErrors.InvalidCredentials);
-        await _ctx.Identity.DidNotReceiveWithAnyArgs().CheckPasswordAsync(default, default!, TestContext.Current.CancellationToken);
+        (await LoginAsync()).Error.ShouldBe(AuthErrors.InvalidCredentials);
+        await _ctx.Identity.DidNotReceiveWithAnyArgs().FindByIdAsync(default, TestContext.Current.CancellationToken);
+        await _ctx.RefreshTokens.DidNotReceiveWithAnyArgs().IssueAsync(default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task Wrong_password_gets_same_generic_error()
+    public async Task Locked_out_user_gets_generic_error_without_revealing_password_validity()
     {
-        ArrangeUser(new PasswordCheckResult(PasswordCheckStatus.InvalidPassword));
+        ArrangeCheck(new PasswordCheckResult(PasswordCheckStatus.LockedOut));
 
         (await LoginAsync()).Error.ShouldBe(AuthErrors.InvalidCredentials);
         await _ctx.RefreshTokens.DidNotReceiveWithAnyArgs().IssueAsync(default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task Locked_out_user_gets_remaining_minutes()
-    {
-        ArrangeUser(new PasswordCheckResult(PasswordCheckStatus.LockedOut, AuthTestContext.Now.AddMinutes(9).AddSeconds(10)));
-
-        var error = (await LoginAsync()).Error;
-
-        error.Code.ShouldBe(AuthErrors.LockedOut.Code);
-        error.Args.ShouldBe([10]);
-    }
-
-    [Fact]
     public async Task Blocked_user_is_rejected()
     {
-        ArrangeUser(new PasswordCheckResult(PasswordCheckStatus.Blocked));
+        ArrangeCheck(new PasswordCheckResult(PasswordCheckStatus.Blocked));
 
         (await LoginAsync()).Error.ShouldBe(AuthErrors.UserBlocked);
     }
@@ -65,15 +56,24 @@ public sealed class LoginCommandHandlerTests
     [Fact]
     public async Task Unconfirmed_email_is_rejected()
     {
-        ArrangeUser(new PasswordCheckResult(PasswordCheckStatus.EmailNotConfirmed));
+        ArrangeCheck(new PasswordCheckResult(PasswordCheckStatus.EmailNotConfirmed));
 
         (await LoginAsync()).Error.ShouldBe(AuthErrors.EmailNotConfirmed);
     }
 
     [Fact]
+    public async Task User_deleted_between_check_and_load_gets_generic_error()
+    {
+        _ctx.Identity.CheckCredentialsAsync("ali", "Secret123", Arg.Any<CancellationToken>())
+            .Returns(PasswordCheckResult.Succeeded(_user.Id));
+
+        (await LoginAsync()).Error.ShouldBe(AuthErrors.InvalidCredentials);
+    }
+
+    [Fact]
     public async Task Success_issues_token_pair_and_updates_last_login()
     {
-        ArrangeUser(PasswordCheckResult.Success);
+        ArrangeCheck(PasswordCheckResult.Succeeded(_user.Id));
         var avatarId = Guid.CreateVersion7();
         _ctx.Profiles.FirstOrDefaultAsync(Arg.Any<ISpecification<UserProfile, ProfileSummary>>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ProfileSummary?>(new ProfileSummary("Ali Valiyev", avatarId, "uz")));

@@ -102,9 +102,17 @@ internal static class RateLimitingSetup
         return RateLimitPartition.GetFixedWindowLimiter($"{policy}:{clientKey}", _ => limiterOptions);
     }
 
-    // Reverse proxy ortida ishlaganda UseForwardedHeaders sozlanishi kerak.
-    private static string ClientIp(HttpContext context) =>
-        "ip:" + (context.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+    // Proksi ortida RemoteIpAddress'ni ForwardedHeaders middleware ("ReverseProxy" bo'limi) to'g'rilaydi.
+    // Sarlavhalar to'g'ridan-to'g'ri o'qilmaydi — ishonchsiz manbadan kelgan X-Forwarded-For limitni chetlab o'tolmaydi.
+    // "::ffff:1.2.3.4" va "1.2.3.4" bitta mijoz hisoblanadi.
+    internal static string ClientIp(HttpContext context)
+    {
+        var address = context.Connection.RemoteIpAddress;
+        if (address is { IsIPv4MappedToIPv6: true })
+            address = address.MapToIPv4();
+
+        return "ip:" + (address?.ToString() ?? "unknown");
+    }
 
     private static string UserOrIp(HttpContext context)
     {

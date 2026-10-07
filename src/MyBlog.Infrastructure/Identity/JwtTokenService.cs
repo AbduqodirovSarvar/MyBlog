@@ -16,6 +16,9 @@ internal static class JwtClaimNames
     public const string UniqueName = JwtRegisteredClaimNames.UniqueName;
     public const string TokenId = JwtRegisteredClaimNames.Jti;
     public const string Role = "role";
+
+    /// <summary>Security stamp'ning xeshi (<see cref="SessionVersions"/>); har so'rovda joriy qiymat bilan solishtiriladi.</summary>
+    public const string SessionVersion = "sv";
 }
 
 internal sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider timeProvider) : ITokenService
@@ -36,7 +39,8 @@ internal sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider
             new(JwtClaimNames.Subject, user.Id.ToString()),
             new(JwtClaimNames.Email, user.Email),
             new(JwtClaimNames.UniqueName, user.UserName),
-            new(JwtClaimNames.TokenId, Guid.NewGuid().ToString("N"))
+            new(JwtClaimNames.TokenId, Guid.NewGuid().ToString("N")),
+            new(JwtClaimNames.SessionVersion, user.SessionVersion)
         ];
         claims.AddRange(user.Roles.Select(role => new Claim(JwtClaimNames.Role, role)));
         claims.AddRange(user.Permissions.Distinct(StringComparer.Ordinal).Select(p => new Claim(Permissions.ClaimType, p)));

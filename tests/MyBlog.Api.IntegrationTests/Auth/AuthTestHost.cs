@@ -54,7 +54,7 @@ internal sealed class AuthTestHost : IAsyncDisposable
     private readonly ApiFactory _apiFactory;
     private readonly WebApplicationFactory<Program> _factory;
 
-    private AuthTestHost(string connectionString)
+    private AuthTestHost(string connectionString, Action<IServiceCollection>? configureServices)
     {
         _apiFactory = new ApiFactory(connectionString);
         _factory = _apiFactory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
@@ -62,15 +62,19 @@ internal sealed class AuthTestHost : IAsyncDisposable
             services.RemoveAll<IEmailQueue>();
             services.AddSingleton(Emails);
             services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<CapturingEmailQueue>());
+            configureServices?.Invoke(services);
         }));
         Client = _factory.CreateClient();
     }
+
+    public IServiceProvider Services => _factory.Services;
 
     public CapturingEmailQueue Emails { get; } = new();
 
     public HttpClient Client { get; }
 
-    public static async Task<AuthTestHost> CreateAsync(PostgresFixture postgres)
+    public static async Task<AuthTestHost> CreateAsync(PostgresFixture postgres,
+        Action<IServiceCollection>? configureServices = null)
     {
         var connectionString = postgres.ConnectionStringFor($"auth_{Guid.NewGuid():N}");
 
@@ -82,7 +86,7 @@ internal sealed class AuthTestHost : IAsyncDisposable
                 await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
         }
 
-        return new AuthTestHost(connectionString);
+        return new AuthTestHost(connectionString, configureServices);
     }
 
     public Task<HttpResponseMessage> PostAsync(string url, object body, string? accessToken = null)

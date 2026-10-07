@@ -27,6 +27,9 @@ internal static class AuthModule
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IUserSessionStateReader, UserSessionStateReader>();
+        services.AddScoped<IUserSessionValidator, UserSessionValidator>();
+        services.AddScoped<DummyPasswordVerifier>();
 
         services.AddIdentityTokenProviders();
         services.AddJwtAuthentication();
@@ -60,7 +63,8 @@ internal static class AuthModule
 
     /// <summary>
     /// JWT Bearer — default sxema. MapInboundClaims=false: claim'lar "sub", "role", "permission" nomlari bilan qoladi
-    /// (Api'dagi HttpCurrentUser shularni o'qiydi).
+    /// (Api'dagi HttpCurrentUser shularni o'qiydi). Imzo/muddatdan tashqari "sv" (security stamp xeshi) va
+    /// bloklanganlik ham tekshiriladi — bloklangan yoki stamp'i o'zgargan foydalanuvchining token'i darhol 401 oladi.
     /// </summary>
     private static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
     {
@@ -71,6 +75,8 @@ internal static class AuthModule
             {
                 bearer.MapInboundClaims = false;
                 bearer.TokenValidationParameters = JwtTokenService.CreateValidationParameters(jwt.Value);
+                bearer.Events ??= new JwtBearerEvents();
+                bearer.Events.OnTokenValidated = UserSessionTokenValidation.OnTokenValidatedAsync;
             });
 
         return services;

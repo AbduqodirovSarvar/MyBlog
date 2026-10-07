@@ -32,7 +32,8 @@ internal sealed class RemoveRoleCommandValidator : AbstractValidator<RemoveRoleC
 
 /// <summary>
 /// O'zini va SuperAdmin'ni bloklab bo'lmaydi; administratorni faqat SuperAdmin bloklaydi.
-/// Bloklanganda barcha refresh token'lar bekor qilinadi.
+/// Bloklanganda barcha refresh token'lar bekor qilinadi; security stamp yangilangani uchun access token'lar ham
+/// keyingi so'rovdayoq rad etiladi.
 /// </summary>
 internal sealed class BlockUserCommandHandler(
     ICurrentUser currentUser,
@@ -80,7 +81,10 @@ internal sealed class UnblockUserCommandHandler(IIdentityService identityService
     }
 }
 
-/// <summary>Rol o'zgarishi keyingi refresh'da token'ga tushadi.</summary>
+/// <summary>
+/// Rol o'zgarishi security stamp'ni yangilaydi: eski access token 401 oladi, mijoz refresh qilib yangi rollar bilan
+/// token oladi.
+/// </summary>
 internal sealed class AssignRoleCommandHandler(IIdentityService identityService) : ICommandHandler<AssignRoleCommand>
 {
     public async Task<Result> Handle(AssignRoleCommand request, CancellationToken cancellationToken)

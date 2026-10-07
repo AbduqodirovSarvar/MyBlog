@@ -73,7 +73,7 @@ internal sealed class AuthTestContext
 
     public static AuthUser User(Guid? id = null, bool emailConfirmed = true, bool isBlocked = false, params string[] roles) =>
         new(id ?? Guid.CreateVersion7(), "ali@example.com", "ali", emailConfirmed, isBlocked,
-            roles.Length == 0 ? [Roles.User] : roles, [Permissions.Posts.Manage]);
+            roles.Length == 0 ? [Roles.User] : roles, [Permissions.Posts.Manage], "session-v1");
 
     /// <summary>ExecuteInTransactionAsync delegatni darhol bajaradi (tranzaksiyasiz).</summary>
     public void RunTransactionsInline<TResult>() =>

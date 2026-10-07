@@ -67,6 +67,8 @@ internal static class DependencyInjection
             .AllowAnyMethod()
             .WithExposedHeaders("Content-Disposition")));
 
+        // Rate limiter IP bo'yicha ishlaydi — proksi ortida haqiqiy IP X-Forwarded-For'dan (faqat ishonchli proksidan) olinadi.
+        services.AddReverseProxySupport();
         services.AddApiRateLimiting();
 
         services.AddOpenApi(options =>
