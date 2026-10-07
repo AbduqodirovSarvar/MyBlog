@@ -1,0 +1,8 @@
+{
+  "Tag.NotFound": "Tag was not found.",
+  "Tag.InvalidOwner": "Tag owner is required.",
+  "Tag.NameRequired": "Tag name is required.",
+  "Tag.NameTooLong": "Tag name must not exceed {0} characters.",
+  "Tag.SlugInvalid": "Slug must contain only lowercase latin letters, digits and hyphens and must not exceed {0} characters.",
+  "Tag.SlugTaken": "A tag with the same slug already exists."
+}

@@ -1,0 +1,23 @@
+{
+  "Category.NotFound": "Category was not found.",
+  "Category.ParentNotFound": "Parent category was not found.",
+  "Category.InvalidOwner": "Category owner is required.",
+  "Category.SlugInvalid": "Slug must contain only lowercase latin letters, digits and hyphens and must not exceed {0} characters.",
+  "Category.SlugFormatInvalid": "Slug may contain only lowercase latin letters, digits and hyphens.",
+  "Category.SlugTaken": "A category with the same slug already exists.",
+  "Category.DefaultTranslationRequired": "Translation for the default language (uz) is required.",
+  "Category.CannotRemoveDefaultTranslation": "Translation for the default language (uz) cannot be removed.",
+  "Category.CultureNotSupported": "This language is not supported.",
+  "Category.DuplicateTranslation": "Translation for culture '{0}' is specified more than once.",
+  "Category.DuplicateCulture": "Each language can be specified only once.",
+  "Category.TranslationNotFound": "Translation for culture '{0}' was not found.",
+  "Category.NameRequired": "Category name is required.",
+  "Category.NameTooLong": "Category name must not exceed {0} characters.",
+  "Category.DescriptionTooLong": "Category description must not exceed {0} characters.",
+  "Category.CannotBeOwnParent": "A category cannot be its own parent.",
+  "Category.CircularReference": "A category cannot be moved under its own descendant.",
+  "Category.MaxDepthExceeded": "Category nesting cannot exceed {0} levels.",
+  "Category.HasChildren": "Category has subcategories and cannot be deleted.",
+  "Category.HasPosts": "Category contains posts and cannot be deleted. Move the posts to another category first.",
+  "Category.OrderInvalid": "Order must be zero or a positive number."
+}

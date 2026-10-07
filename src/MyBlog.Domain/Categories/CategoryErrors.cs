@@ -41,6 +41,7 @@ public static class CategoryErrors
         .WithArgs(MaxDepth);
 
     public static readonly Error HasChildren = Error.Conflict("Category.HasChildren", "Category has subcategories and cannot be deleted.");
+    public static readonly Error HasPosts = Error.Conflict("Category.HasPosts", "Category contains posts and cannot be deleted.");
     public static readonly Error OrderInvalid = Error.Validation("Category.OrderInvalid", "Order must be zero or a positive number.");
 
     public static Error CultureNotSupportedFor(string culture) => CultureNotSupported.WithArgs(culture);
