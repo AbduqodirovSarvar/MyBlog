@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MyBlog.Domain.Users;
 
 namespace MyBlog.Infrastructure.Identity.Configurations;
 
@@ -10,6 +11,12 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
     {
         builder.ToTable("users");
         builder.HasIndex(u => u.CreatedAt);
+
+        // user_profiles.id → users.id: profil identity foydalanuvchisi bilan birga o'chadi.
+        builder.HasOne<UserProfile>()
+            .WithOne()
+            .HasForeignKey<UserProfile>(p => p.Id)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
