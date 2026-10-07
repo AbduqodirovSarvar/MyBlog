@@ -1,0 +1,23 @@
+{
+  "Category.NotFound": "Категория топилмади.",
+  "Category.ParentNotFound": "Ота категория топилмади.",
+  "Category.InvalidOwner": "Категория эгаси кўрсатилиши шарт.",
+  "Category.SlugInvalid": "Slug фақат кичик лотин ҳарфлари, рақамлар ва '-' белгисидан иборат бўлиши ва {0} белгидан ошмаслиги керак.",
+  "Category.SlugFormatInvalid": "Slug фақат кичик лотин ҳарфлари, рақамлар ва '-' белгисидан иборат бўлиши керак.",
+  "Category.SlugTaken": "Бундай slug'ли категория аллақачон мавжуд.",
+  "Category.DefaultTranslationRequired": "Ўзбекча (uz) таржима киритилиши шарт.",
+  "Category.CannotRemoveDefaultTranslation": "Ўзбекча (uz) таржимани ўчириб бўлмайди.",
+  "Category.CultureNotSupported": "Бу тил қўллаб-қувватланмайди.",
+  "Category.DuplicateTranslation": "'{0}' тили учун таржима бир неча марта берилган.",
+  "Category.DuplicateCulture": "Ҳар бир тил фақат бир марта кўрсатилиши мумкин.",
+  "Category.TranslationNotFound": "'{0}' тили учун таржима топилмади.",
+  "Category.NameRequired": "Категория номи киритилиши шарт.",
+  "Category.NameTooLong": "Категория номи {0} белгидан ошмаслиги керак.",
+  "Category.DescriptionTooLong": "Категория тавсифи {0} белгидан ошмаслиги керак.",
+  "Category.CannotBeOwnParent": "Категория ўзига ота бўла олмайди.",
+  "Category.CircularReference": "Категорияни ўзининг ички категорияси остига кўчириб бўлмайди.",
+  "Category.MaxDepthExceeded": "Категориялар ичма-ичлиги {0} даражадан ошмаслиги керак.",
+  "Category.HasChildren": "Категорияда ички категориялар бор, уни ўчириб бўлмайди.",
+  "Category.HasPosts": "Категорияда постлар бор, уни ўчириб бўлмайди. Аввал постларни бошқа категорияга ўтказинг.",
+  "Category.OrderInvalid": "Тартиб рақами манфий бўлмаслиги керак."
+}

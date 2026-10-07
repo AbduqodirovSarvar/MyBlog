@@ -1,0 +1,23 @@
+{
+  "Category.NotFound": "Kategoriya topilmadi.",
+  "Category.ParentNotFound": "Ota kategoriya topilmadi.",
+  "Category.InvalidOwner": "Kategoriya egasi ko'rsatilishi shart.",
+  "Category.SlugInvalid": "Slug faqat kichik lotin harflari, raqamlar va '-' belgisidan iborat bo'lishi va {0} belgidan oshmasligi kerak.",
+  "Category.SlugFormatInvalid": "Slug faqat kichik lotin harflari, raqamlar va '-' belgisidan iborat bo'lishi kerak.",
+  "Category.SlugTaken": "Bunday slug'li kategoriya allaqachon mavjud.",
+  "Category.DefaultTranslationRequired": "O'zbekcha (uz) tarjima kiritilishi shart.",
+  "Category.CannotRemoveDefaultTranslation": "O'zbekcha (uz) tarjimani o'chirib bo'lmaydi.",
+  "Category.CultureNotSupported": "Bu til qo'llab-quvvatlanmaydi.",
+  "Category.DuplicateTranslation": "'{0}' tili uchun tarjima bir necha marta berilgan.",
+  "Category.DuplicateCulture": "Har bir til faqat bir marta ko'rsatilishi mumkin.",
+  "Category.TranslationNotFound": "'{0}' tili uchun tarjima topilmadi.",
+  "Category.NameRequired": "Kategoriya nomi kiritilishi shart.",
+  "Category.NameTooLong": "Kategoriya nomi {0} belgidan oshmasligi kerak.",
+  "Category.DescriptionTooLong": "Kategoriya tavsifi {0} belgidan oshmasligi kerak.",
+  "Category.CannotBeOwnParent": "Kategoriya o'ziga ota bo'la olmaydi.",
+  "Category.CircularReference": "Kategoriyani o'zining ichki kategoriyasi ostiga ko'chirib bo'lmaydi.",
+  "Category.MaxDepthExceeded": "Kategoriyalar ichma-ichligi {0} darajadan oshmasligi kerak.",
+  "Category.HasChildren": "Kategoriyada ichki kategoriyalar bor, uni o'chirib bo'lmaydi.",
+  "Category.HasPosts": "Kategoriyada postlar bor, uni o'chirib bo'lmaydi. Avval postlarni boshqa kategoriyaga o'tkazing.",
+  "Category.OrderInvalid": "Tartib raqami manfiy bo'lmasligi kerak."
+}

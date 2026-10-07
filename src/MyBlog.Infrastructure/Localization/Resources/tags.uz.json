@@ -1,0 +1,8 @@
+{
+  "Tag.NotFound": "Teg topilmadi.",
+  "Tag.InvalidOwner": "Teg egasi ko'rsatilishi shart.",
+  "Tag.NameRequired": "Teg nomi kiritilishi shart.",
+  "Tag.NameTooLong": "Teg nomi {0} belgidan oshmasligi kerak.",
+  "Tag.SlugInvalid": "Teg slug'i faqat kichik lotin harflari, raqamlar va '-' belgisidan iborat bo'lishi va {0} belgidan oshmasligi kerak.",
+  "Tag.SlugTaken": "Bunday nomli teg allaqachon mavjud."
+}

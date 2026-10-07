@@ -1,0 +1,23 @@
+{
+  "Category.NotFound": "Категория не найдена.",
+  "Category.ParentNotFound": "Родительская категория не найдена.",
+  "Category.InvalidOwner": "Необходимо указать владельца категории.",
+  "Category.SlugInvalid": "Slug может содержать только строчные латинские буквы, цифры и '-' и не должен превышать {0} символов.",
+  "Category.SlugFormatInvalid": "Slug может содержать только строчные латинские буквы, цифры и '-'.",
+  "Category.SlugTaken": "Категория с таким slug уже существует.",
+  "Category.DefaultTranslationRequired": "Перевод на узбекский (uz) обязателен.",
+  "Category.CannotRemoveDefaultTranslation": "Перевод на узбекский (uz) нельзя удалить.",
+  "Category.CultureNotSupported": "Этот язык не поддерживается.",
+  "Category.DuplicateTranslation": "Перевод для языка '{0}' указан несколько раз.",
+  "Category.DuplicateCulture": "Каждый язык можно указать только один раз.",
+  "Category.TranslationNotFound": "Перевод для языка '{0}' не найден.",
+  "Category.NameRequired": "Укажите название категории.",
+  "Category.NameTooLong": "Название категории не должно превышать {0} символов.",
+  "Category.DescriptionTooLong": "Описание категории не должно превышать {0} символов.",
+  "Category.CannotBeOwnParent": "Категория не может быть родителем самой себя.",
+  "Category.CircularReference": "Нельзя переместить категорию внутрь её собственной подкатегории.",
+  "Category.MaxDepthExceeded": "Вложенность категорий не может превышать {0} уровня.",
+  "Category.HasChildren": "У категории есть подкатегории, её нельзя удалить.",
+  "Category.HasPosts": "В категории есть публикации, её нельзя удалить. Сначала перенесите публикации в другую категорию.",
+  "Category.OrderInvalid": "Порядковый номер не может быть отрицательным."
+}
