@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using MyBlog.Api.Authorization;
 using MyBlog.Api.Common;
 using MyBlog.Api.Infrastructure;
 using MyBlog.Api.OpenApi;
@@ -19,6 +20,7 @@ internal static class DependencyInjection
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddPermissionAuthorization();
 
         services.AddControllers()
             .ConfigureApiBehaviorOptions(options =>

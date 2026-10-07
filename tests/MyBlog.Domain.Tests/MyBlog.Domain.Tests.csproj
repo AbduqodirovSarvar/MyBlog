@@ -5,9 +5,6 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <RootNamespace>MyBlog.Domain.Tests</RootNamespace>
-    <!-- .NET 10 SDK'da "dotnet test" VSTest rejimida: xunit.runner.visualstudio orqali ishga tushadi.
-         Agar global.json'da MTP runner yoqilsa, bu qatorni olib tashlash kerak. -->
-    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>
