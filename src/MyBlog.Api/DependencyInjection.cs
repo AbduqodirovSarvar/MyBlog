@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using MyBlog.Api.Authorization;
@@ -22,7 +23,17 @@ internal static class DependencyInjection
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
         services.AddPermissionAuthorization();
 
-        services.AddControllers()
+        // Enum'lar JSON'da matn ko'rinishida ("Published", "Like") — Angular uchun qulay va OpenAPI'da ham shunday ko'rinadi.
+        services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+        services.AddControllers(options =>
+            {
+                // Non-nullable string'lar uchun avtomatik [Required] o'chiriladi: bo'sh maydonlarni FluentValidation
+                // aniq kodlar bilan tekshiradi (aks holda umumiy General.InvalidValue qaytadi).
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+            })
+            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
             .ConfigureApiBehaviorOptions(options =>
             {
                 // Model binding xatolari ham bir xil ko'rinishdagi ValidationError bo'lib qaytadi.

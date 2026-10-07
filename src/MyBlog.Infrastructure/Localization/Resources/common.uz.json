@@ -7,5 +7,6 @@
   "General.ServerError": "Serverda kutilmagan xatolik yuz berdi. Keyinroq qayta urinib ko'ring.",
   "General.TooManyRequests": "Juda ko'p so'rov yuborildi. Birozdan so'ng qayta urinib ko'ring.",
   "General.ConcurrencyConflict": "Ma'lumot boshqa foydalanuvchi tomonidan o'zgartirilgan. Sahifani yangilab, qayta urinib ko'ring.",
-  "General.InvalidValue": "Qiymat noto'g'ri formatda."
+  "General.InvalidValue": "Qiymat noto'g'ri formatda.",
+  "General.DuplicateValue": "Bunday qiymatli yozuv allaqachon mavjud."
 }

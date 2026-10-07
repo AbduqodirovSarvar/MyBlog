@@ -79,7 +79,8 @@ public static class DependencyInjection
             options
                 .UseNpgsql(connectionString, npgsql => npgsql.MigrationsHistoryTable(MigrationsHistoryTable))
                 .UseSnakeCaseNamingConvention()
-                .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+                .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>())
+                .AddInterceptors(sp.GetRequiredService<TransactionalEmailQueue>());
 
             if (environment.IsDevelopment())
                 options.EnableDetailedErrors();
@@ -149,7 +150,9 @@ public static class DependencyInjection
         services.AddValidatedOptions<SmtpOptions>(SmtpOptions.SectionName);
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<ChannelEmailQueue>();
-        services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<ChannelEmailQueue>());
+        // Xatlar tranzaksiya commit bo'lgandan keyingina navbatga tushadi (TransactionalEmailQueue).
+        services.AddScoped<TransactionalEmailQueue>();
+        services.AddScoped<IEmailQueue>(sp => sp.GetRequiredService<TransactionalEmailQueue>());
         services.AddSingleton<IEmailTemplateRenderer, EmbeddedEmailTemplateRenderer>();
 
         return services;

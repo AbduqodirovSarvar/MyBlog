@@ -69,6 +69,7 @@ internal static class GeneralErrors
     public static readonly Error NotFound = Error.NotFound("General.NotFound", "The requested resource was not found.");
     public static readonly Error Unauthorized = Error.Unauthorized("General.Unauthorized", "Please sign in first.");
     public static readonly Error Forbidden = Error.Forbidden("General.Forbidden", "You do not have permission to perform this action.");
+    public static readonly Error DuplicateValue = Error.Conflict("General.DuplicateValue", "A record with the same value already exists.");
     public static readonly Error ConcurrencyConflict = Error.Conflict("General.ConcurrencyConflict", "The data was changed by another user.");
     public static readonly Error ServerError = Error.Failure("General.ServerError", "An unexpected server error occurred.");
     public static readonly Error TooManyRequests = new("General.TooManyRequests", "Too many requests.", ErrorType.TooManyRequests);

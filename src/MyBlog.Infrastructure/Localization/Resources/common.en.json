@@ -7,5 +7,6 @@
   "General.ServerError": "An unexpected server error occurred. Please try again later.",
   "General.TooManyRequests": "Too many requests. Please try again a little later.",
   "General.ConcurrencyConflict": "The data was changed by another user. Refresh the page and try again.",
-  "General.InvalidValue": "The value has an invalid format."
+  "General.InvalidValue": "The value has an invalid format.",
+  "General.DuplicateValue": "A record with the same value already exists."
 }

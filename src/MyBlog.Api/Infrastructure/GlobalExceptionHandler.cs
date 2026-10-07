@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyBlog.Api.Common;
 using MyBlog.Domain.Common;
 using MyBlog.Infrastructure.Persistence;
+using Npgsql;
 
 namespace MyBlog.Api.Infrastructure;
 
@@ -40,6 +41,9 @@ internal sealed class GlobalExceptionHandler(IHostEnvironment environment, ILogg
     private static (Error Error, int Status) Map(Exception exception) => exception switch
     {
         DbUpdateConcurrencyException => (GeneralErrors.ConcurrencyConflict, StatusCodes.Status409Conflict),
+        // Parallel so'rovlar unique indeksga urilsa (masalan bir xil slug) — 500 emas, 409.
+        DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } =>
+            (GeneralErrors.DuplicateValue, StatusCodes.Status409Conflict),
         UnauthorizedAccessException => (GeneralErrors.Unauthorized, StatusCodes.Status401Unauthorized),
         ForbiddenOwnershipException => (GeneralErrors.Forbidden, StatusCodes.Status403Forbidden),
         BadHttpRequestException bad => (Error.Validation("General.Validation", "The request is invalid."), bad.StatusCode),
