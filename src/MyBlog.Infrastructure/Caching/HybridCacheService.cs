@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Caching.Hybrid;
 using MyBlog.Application.Abstractions.Services;
 
@@ -15,10 +16,29 @@ internal sealed class HybridCacheService(HybridCache cache) : ICacheService
             ? new HybridCacheEntryOptions { Expiration = ttl, LocalCacheExpiration = ttl }
             : null;
 
+        // HybridCache factory'ni so'rov ExecutionContext'isiz ishga tushiradi — culture oqib o'tmaydi va
+        // lokalizatsiyalangan qiymatlar (kategoriya nomlari) server tilida yasalib qoladi. Shuning uchun
+        // chaqiruvchining tilini saqlab, factory ichida tiklaymiz.
+        var state = new FactoryState<T>(factory, CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+
         return await cache.GetOrCreateAsync(
             key,
-            factory,
-            static async (state, ct) => await state(ct),
+            state,
+            static async (s, ct) =>
+            {
+                var (previous, previousUi) = (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+                CultureInfo.CurrentCulture = s.Culture;
+                CultureInfo.CurrentUICulture = s.UICulture;
+                try
+                {
+                    return await s.Factory(ct);
+                }
+                finally
+                {
+                    CultureInfo.CurrentCulture = previous;
+                    CultureInfo.CurrentUICulture = previousUi;
+                }
+            },
             options,
             tags,
             cancellationToken);
@@ -29,4 +49,6 @@ internal sealed class HybridCacheService(HybridCache cache) : ICacheService
 
     public Task RemoveByTagAsync(string tag, CancellationToken cancellationToken = default) =>
         cache.RemoveByTagAsync(tag, cancellationToken).AsTask();
+
+    private sealed record FactoryState<T>(Func<CancellationToken, Task<T>> Factory, CultureInfo Culture, CultureInfo UICulture);
 }

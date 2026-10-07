@@ -77,7 +77,10 @@ public static class DependencyInjection
                 ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is not configured.");
 
             options
-                .UseNpgsql(connectionString, npgsql => npgsql.MigrationsHistoryTable(MigrationsHistoryTable))
+                // SplitQuery: Post.Tags/Post.Media kabi bir nechta collection birga yuklanganda cartesian explosion bo'lmaydi.
+                .UseNpgsql(connectionString, npgsql => npgsql
+                    .MigrationsHistoryTable(MigrationsHistoryTable)
+                    .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>())
                 .AddInterceptors(sp.GetRequiredService<TransactionalEmailQueue>());
