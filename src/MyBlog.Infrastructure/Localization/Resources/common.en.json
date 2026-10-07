@@ -1,0 +1,11 @@
+{
+  "General.Validation": "One or more validation errors occurred.",
+  "General.NotFound": "The requested resource was not found.",
+  "General.Unauthorized": "Please sign in first.",
+  "General.Forbidden": "You do not have permission to perform this action.",
+  "General.Conflict": "The action conflicts with the current state of the data.",
+  "General.ServerError": "An unexpected server error occurred. Please try again later.",
+  "General.TooManyRequests": "Too many requests. Please try again a little later.",
+  "General.ConcurrencyConflict": "The data was changed by another user. Refresh the page and try again.",
+  "General.InvalidValue": "The value has an invalid format."
+}
