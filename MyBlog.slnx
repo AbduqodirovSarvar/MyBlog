@@ -6,6 +6,9 @@
     <Project Path="src/MyBlog.Infrastructure/MyBlog.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/MyBlog.Api.IntegrationTests/MyBlog.Api.IntegrationTests.csproj" />
+    <Project Path="tests/MyBlog.Application.Tests/MyBlog.Application.Tests.csproj" />
+    <Project Path="tests/MyBlog.Infrastructure.Tests/MyBlog.Infrastructure.Tests.csproj" />
     <Project Path="tests/MyBlog.Domain.Tests/MyBlog.Domain.Tests.csproj" />
   </Folder>
 </Solution>

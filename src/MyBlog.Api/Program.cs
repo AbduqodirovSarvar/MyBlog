@@ -1,23 +1,51 @@
+using MyBlog.Api;
+using MyBlog.Api.Endpoints;
+using MyBlog.Application;
+using MyBlog.Infrastructure;
+using MyBlog.Infrastructure.Persistence;
+using Scalar.AspNetCore;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddSerilog((services, logger) => logger
+    .ReadFrom.Configuration(builder.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration, builder.Environment)
+    .AddPresentation(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+await app.Services.InitializeDatabaseAsync();
+
+app.UseExceptionHandler();
+
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
+
+app.UseSerilogRequestLogging();
+app.UseRequestLocalization();
+app.UseCors(MyBlog.Api.DependencyInjection.CorsPolicy);
+
+// Autentifikatsiya rate limiter'dan oldin: Comments/Upload policy'lari foydalanuvchi bo'yicha bo'linadi.
+app.UseAuthentication();
+app.UseRateLimiter();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
 app.MapControllers();
+app.MapMediaEndpoints();
+app.MapHealthChecks("/health").DisableRateLimiting();
 
-app.Run();
+await app.RunAsync();
+
+public partial class Program;

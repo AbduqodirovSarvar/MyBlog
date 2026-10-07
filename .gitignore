@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Claude Code worktrees
 .claude/worktrees/
+
+# Lokal media fayllari (LocalFileStorage)
+src/MyBlog.Api/storage/

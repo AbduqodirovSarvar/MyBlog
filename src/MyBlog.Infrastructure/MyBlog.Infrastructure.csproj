@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\MyBlog.Application\MyBlog.Application.csproj" />
@@ -16,20 +16,26 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     <PackageReference Include="HtmlSanitizer" />
     <PackageReference Include="MailKit" />
   </ItemGroup>
 
+  <!--
+    WithCulture=false: aks holda MSBuild "common.ru.json" kabi fayllarni satellite assembly'ga ko'chiradi.
+    LogicalName: resurs nomlari bashorat qilinadigan bo'lishi uchun (papka nomidagi "-" buzilmaydi).
+  -->
   <ItemGroup>
-    <EmbeddedResource Include="Localization\Resources\**\*.json" />
-    <EmbeddedResource Include="Email\Templates\**\*.html" />
+    <EmbeddedResource Include="Localization\Resources\**\*.json" WithCulture="false" LogicalName="Localization/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Email\Templates\**\*.html" WithCulture="false" LogicalName="Email/Templates/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="MyBlog.Infrastructure.Tests" />
     <InternalsVisibleTo Include="MyBlog.Api.IntegrationTests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 
 </Project>
