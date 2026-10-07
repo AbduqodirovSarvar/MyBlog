@@ -1,0 +1,19 @@
+{
+  "Media.NotFound": "Media file was not found.",
+  "Media.InvalidOwner": "Media owner is required.",
+  "Media.FileNameRequired": "File name is required.",
+  "Media.ContentTypeInvalid": "Content type is not valid.",
+  "Media.StorageKeyInvalid": "Storage key is not valid.",
+  "Media.SizeInvalid": "File size must be greater than zero.",
+  "Media.DimensionsInvalid": "Image width and height must both be positive numbers.",
+  "Media.VariantInvalid": "Media variant is not valid.",
+  "Media.AltTextTooLong": "Alt text must not exceed {0} characters.",
+  "Media.CaptionTooLong": "Caption must not exceed {0} characters.",
+  "Media.UnsupportedFileType": "File type is not supported. Allowed: JPEG, PNG, WebP, GIF.",
+  "Media.FileTooLarge": "File size must not exceed {0} bytes.",
+  "Media.FileRequired": "Please select a file to upload.",
+  "Media.FileContentMismatch": "File content does not match its type. The file may be damaged or disguised.",
+  "Media.InvalidImage": "The file is not a valid image.",
+  "Media.ImageTooLarge": "Image dimensions are too large.",
+  "Media.InUse": "This file is used in a post, profile or category and cannot be deleted."
+}

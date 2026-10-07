@@ -35,4 +35,16 @@ public sealed class PostRevision : Entity, IAggregateRoot, IOwnedEntity
 
         return new PostRevision(post.Id, post.OwnerId, number, kind, post.Title, post.Content.Copy(), now.ToUniversalTime());
     }
+
+    /// <summary>Postga hali qo'llanmagan holat (masalan autosave): title va kontent alohida beriladi.</summary>
+    public static PostRevision Create(Post post, RevisionKind kind, int number, string title, PostContent content,
+        DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(post);
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        ArgumentOutOfRangeException.ThrowIfLessThan(number, 1);
+
+        return new PostRevision(post.Id, post.OwnerId, number, kind, title.Trim(), content.Copy(), now.ToUniversalTime());
+    }
 }

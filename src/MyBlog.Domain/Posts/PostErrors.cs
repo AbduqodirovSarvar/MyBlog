@@ -34,6 +34,14 @@ public static class PostErrors
 
     public static readonly Error ContentTooLong = Error.Validation("Post.ContentTooLong", "Content is too long.");
 
+    public static readonly Error UnsupportedContentFormat = Error.Validation("Post.UnsupportedContentFormat", "Content format '{0}' is not supported.");
+    public static readonly Error InvalidRawDocument = Error.Validation("Post.InvalidRawDocument", "Editor document is not valid JSON.");
+    public static readonly Error InvalidMediaReference = Error.Validation("Post.InvalidMediaReference", "Content references a media file that does not exist or does not belong to you.");
+
+    // Bog'lanishlar
+    public static readonly Error CategoryNotFound = Error.Validation("Post.CategoryNotFound", "Category was not found or is not active.");
+    public static readonly Error VersionConflict = Error.Conflict("Post.VersionConflict", "The post was changed in the meantime. Reload it and try again.");
+
     // SEO
     public static readonly Error MetaTitleTooLong = Error.Validation("Post.MetaTitleTooLong", "Meta title must not exceed {0} characters.")
         .WithArgs(MetaTitleMaxLength);

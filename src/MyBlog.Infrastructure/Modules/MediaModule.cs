@@ -1,5 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MyBlog.Application.Features.Media;
+using MyBlog.Application.Features.Media.Abstractions;
+using MyBlog.Infrastructure.Media;
 
 namespace MyBlog.Infrastructure.Modules;
 
@@ -8,6 +11,11 @@ internal static class MediaModule
 {
     public static IServiceCollection AddMediaInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddValidatedOptions<MediaOptions>(MediaOptions.SectionName);
+
+        services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
+        services.AddSingleton<IFileSignatureValidator, MagicBytesSignatureValidator>();
+
         return services;
     }
 }
