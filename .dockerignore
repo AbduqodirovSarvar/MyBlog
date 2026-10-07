@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/*.user
+.git/
+.claude/
+.config/
+tests/
+src/MyBlog.Api/storage/
+**/appsettings.*.local.json

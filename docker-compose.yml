@@ -1,0 +1,53 @@
+# Lokal ishga tushirish: docker compose up --build
+#   API:      http://localhost:8080  (Scalar UI faqat Development'da: http://localhost:8080/scalar)
+#   MailPit:  http://localhost:8025  (yuborilgan barcha emaillar shu yerda ko'rinadi)
+# Maxfiy qiymatlarni .env faylida bering (namuna: .env.example).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: myblog
+      POSTGRES_USER: myblog
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-myblog_dev_password}
+    ports:
+      - "5433:5432" # lokal PostgreSQL 5432'da ishlayotgani uchun 5433
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myblog -d myblog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025" # web UI
+      - "1025:1025" # SMTP
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__Default: Host=db;Port=5432;Database=myblog;Username=myblog;Password=${POSTGRES_PASSWORD:-myblog_dev_password}
+      Smtp__Host: mailpit
+      Smtp__Port: "1025"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-DEV-ONLY-compose-signing-key-0123456789abcdef0123456789abcdef0123}
+      Seed__SuperAdmin__Email: ${SUPERADMIN_EMAIL:-admin@myblog.local}
+      Seed__SuperAdmin__UserName: ${SUPERADMIN_USERNAME:-superadmin}
+      Seed__SuperAdmin__Password: ${SUPERADMIN_PASSWORD:-ChangeMe123!}
+      Cors__AllowedOrigins__0: ${FRONTEND_URL:-http://localhost:4200}
+      Frontend__BaseUrl: ${FRONTEND_URL:-http://localhost:4200}
+    ports:
+      - "8080:8080"
+    volumes:
+      - media-data:/app/storage
+
+volumes:
+  db-data:
+  media-data:
