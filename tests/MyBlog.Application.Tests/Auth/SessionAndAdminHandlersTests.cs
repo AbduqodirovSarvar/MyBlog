@@ -2,6 +2,7 @@ using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Identity;
 using MyBlog.Application.Features.Auth;
 using MyBlog.Application.Features.Auth.Admin;
+using MyBlog.Application.Features.Auth.Logout;
 using MyBlog.Application.Features.Auth.Refresh;
 using MyBlog.Domain.Common;
 using NSubstitute;
@@ -125,5 +126,28 @@ public sealed class AdminUserHandlersTests
         validator.Validate(new AssignRoleCommand(Guid.NewGuid(), "admin")).IsValid.ShouldBeTrue();
         validator.Validate(new AssignRoleCommand(Guid.NewGuid(), "Owner")).Errors
             .ShouldContain(e => e.ErrorCode == "Auth.RoleNotFound");
+    }
+}
+
+public sealed class LogoutAllCommandHandlerTests
+{
+    private readonly AuthTestContext _ctx = new();
+
+    [Fact]
+    public async Task Revokes_refresh_tokens_and_invalidates_access_tokens()
+    {
+        var userId = Guid.CreateVersion7();
+        _ctx.SignIn(userId);
+        _ctx.Identity.InvalidateSessionsAsync(userId, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success()));
+
+        var result = await new LogoutAllCommandHandler(_ctx.RefreshTokens, _ctx.Identity, _ctx.CurrentUser)
+            .Handle(new LogoutAllCommand(), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        Received.InOrder(() =>
+        {
+            _ctx.RefreshTokens.RevokeAllForUserAsync(userId, Arg.Any<string>(), Arg.Any<CancellationToken>());
+            _ctx.Identity.InvalidateSessionsAsync(userId, Arg.Any<CancellationToken>());
+        });
     }
 }

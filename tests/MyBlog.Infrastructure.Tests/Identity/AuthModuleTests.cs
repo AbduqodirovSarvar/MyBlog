@@ -90,6 +90,13 @@ public sealed class AuthModuleTests
         bearer.TokenValidationParameters.ValidIssuer.ShouldBe("MyBlog");
         bearer.TokenValidationParameters.ValidAudience.ShouldBe("MyBlog.Client");
         bearer.TokenValidationParameters.ClockSkew.ShouldBe(TimeSpan.FromSeconds(30));
+
+        // Imzodan tashqari sessiya (security stamp) ham tekshiriladi.
+        bearer.Events.OnTokenValidated.ShouldBe(UserSessionTokenValidation.OnTokenValidatedAsync);
+
+        await using var scope = provider.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<IUserSessionValidator>().ShouldBeOfType<UserSessionValidator>();
+        scope.ServiceProvider.GetRequiredService<DummyPasswordVerifier>().ShouldNotBeNull();
     }
 
     [Fact]

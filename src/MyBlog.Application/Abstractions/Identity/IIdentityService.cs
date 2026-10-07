@@ -21,8 +21,13 @@ public interface IIdentityService
     Task<bool> IsEmailTakenAsync(string email, CancellationToken cancellationToken = default);
     Task<bool> IsUserNameTakenAsync(string userName, CancellationToken cancellationToken = default);
 
-    /// <summary>Parolni tekshiradi: lockout hisoblagichi, bloklangan va tasdiqlanmagan email holatlari bilan.</summary>
-    Task<PasswordCheckResult> CheckPasswordAsync(Guid userId, string password, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Login uchun: foydalanuvchini ("@" bo'lsa email, aks holda username) topib parolni tekshiradi. Foydalanuvchi
+    /// topilmasa ham parol xeshi tekshiriladi (javob vaqti mavjudlikni oshkor qilmasin). Bloklangan/tasdiqlanmagan
+    /// holat faqat parol to'g'ri bo'lganda qaytadi; lockout paytida parol hisoblagichi o'zgarmaydi.
+    /// </summary>
+    Task<PasswordCheckResult> CheckCredentialsAsync(string emailOrUserName, string password,
+        CancellationToken cancellationToken = default);
 
     Task UpdateLastLoginAsync(Guid userId, CancellationToken cancellationToken = default);
 
@@ -36,9 +41,13 @@ public interface IIdentityService
 
     Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
 
-    /// <summary>Bloklash/blokdan chiqarish; security stamp yangilanadi.</summary>
+    /// <summary>Bloklash/blokdan chiqarish; security stamp yangilanadi (mavjud access token'lar bekor bo'ladi).</summary>
     Task<Result> SetBlockedAsync(Guid userId, bool blocked, CancellationToken cancellationToken = default);
 
+    /// <summary>Security stamp'ni yangilaydi: foydalanuvchining barcha mavjud access token'lari bekor bo'ladi.</summary>
+    Task<Result> InvalidateSessionsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Rol qo'shish/olib tashlash security stamp'ni yangilaydi (token'dagi rollar eskiradi).</summary>
     Task<Result> AddToRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default);
     Task<Result> RemoveFromRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default);
     Task<int> CountUsersInRoleAsync(string role, CancellationToken cancellationToken = default);
@@ -49,7 +58,7 @@ public interface IIdentityService
 
 public interface ITokenService
 {
-    /// <summary>JWT access token: sub, email, unique_name, jti, role(lar), permission(lar).</summary>
+    /// <summary>JWT access token: sub, email, unique_name, jti, sv (sessiya versiyasi), role(lar), permission(lar).</summary>
     AccessToken CreateAccessToken(AuthUser user);
 }
 

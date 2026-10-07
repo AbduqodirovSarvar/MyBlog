@@ -18,7 +18,9 @@ internal sealed class IdentityService(
     AppDbContext dbContext,
     IOptions<IdentityOptions> identityOptions,
     ILocalizer localizer,
-    TimeProvider timeProvider) : IIdentityService
+    TimeProvider timeProvider,
+    IUserSessionValidator sessionValidator,
+    DummyPasswordVerifier dummyPasswordVerifier) : IIdentityService
 {
     public async Task<Result<Guid>> CreateUserAsync(string email, string userName, string password,
         CancellationToken cancellationToken = default)
@@ -47,13 +49,8 @@ internal sealed class IdentityService(
     public async Task<AuthUser?> FindByEmailAsync(string email, CancellationToken cancellationToken = default) =>
         await ToAuthUserAsync(await userManager.FindByEmailAsync(email), cancellationToken);
 
-    public async Task<AuthUser?> FindByEmailOrUserNameAsync(string emailOrUserName, CancellationToken cancellationToken = default)
-    {
-        var user = emailOrUserName.Contains('@', StringComparison.Ordinal)
-            ? await userManager.FindByEmailAsync(emailOrUserName)
-            : await userManager.FindByNameAsync(emailOrUserName);
-        return await ToAuthUserAsync(user, cancellationToken);
-    }
+    public async Task<AuthUser?> FindByEmailOrUserNameAsync(string emailOrUserName, CancellationToken cancellationToken = default) =>
+        await ToAuthUserAsync(await FindApplicationUserAsync(emailOrUserName), cancellationToken);
 
     public async Task<bool> IsEmailTakenAsync(string email, CancellationToken cancellationToken = default) =>
         await userManager.FindByEmailAsync(email) is not null;
@@ -61,21 +58,35 @@ internal sealed class IdentityService(
     public async Task<bool> IsUserNameTakenAsync(string userName, CancellationToken cancellationToken = default) =>
         await userManager.FindByNameAsync(userName) is not null;
 
-    public async Task<PasswordCheckResult> CheckPasswordAsync(Guid userId, string password, CancellationToken cancellationToken = default)
+    public async Task<PasswordCheckResult> CheckCredentialsAsync(string emailOrUserName, string password,
+        CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByIdAsync(userId.ToString());
-        if (user is null)
+        var user = await FindApplicationUserAsync(emailOrUserName);
+        if (user?.PasswordHash is null)
+        {
+            // Mavjud foydalanuvchi bilan bir xil ish: bitta to'liq xesh tekshiruvi.
+            dummyPasswordVerifier.Verify(password);
             return new PasswordCheckResult(PasswordCheckStatus.InvalidPassword);
+        }
 
-        if (await userManager.IsLockedOutAsync(user))
-            return new PasswordCheckResult(PasswordCheckStatus.LockedOut, user.LockoutEnd);
+        var lockedOut = await userManager.IsLockedOutAsync(user);
+        var stampBefore = user.SecurityStamp;
 
-        if (!await userManager.CheckPasswordAsync(user, password))
+        // Parol har doim tekshiriladi (lockout'da ham) — javob vaqti holatga bog'liq bo'lmasin.
+        var passwordValid = await userManager.CheckPasswordAsync(user, password);
+
+        // Rehash kerak bo'lsa Identity stamp'ni ham yangilaydi — keshdagi eski qiymat yangi token'ni rad etmasin.
+        if (!string.Equals(stampBefore, user.SecurityStamp, StringComparison.Ordinal))
+            await sessionValidator.InvalidateAsync(user.Id, cancellationToken);
+
+        // Lockout paytida urinishlar hisoblanmaydi va natija oshkor qilinmaydi (handler umumiy xato qaytaradi).
+        if (lockedOut)
+            return new PasswordCheckResult(PasswordCheckStatus.LockedOut);
+
+        if (!passwordValid)
         {
             await userManager.AccessFailedAsync(user);
-            return await userManager.IsLockedOutAsync(user)
-                ? new PasswordCheckResult(PasswordCheckStatus.LockedOut, user.LockoutEnd)
-                : new PasswordCheckResult(PasswordCheckStatus.InvalidPassword);
+            return new PasswordCheckResult(PasswordCheckStatus.InvalidPassword);
         }
 
         if (await userManager.GetAccessFailedCountAsync(user) > 0)
@@ -88,7 +99,7 @@ internal sealed class IdentityService(
         if (identityOptions.Value.SignIn.RequireConfirmedEmail && !user.EmailConfirmed)
             return new PasswordCheckResult(PasswordCheckStatus.EmailNotConfirmed);
 
-        return PasswordCheckResult.Success;
+        return PasswordCheckResult.Succeeded(user.Id);
     }
 
     public Task UpdateLastLoginAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -139,6 +150,8 @@ internal sealed class IdentityService(
                 : MapErrors(result.Errors, passwordField: "newPassword");
         }
 
+        await sessionValidator.InvalidateAsync(user.Id, cancellationToken);
+
         // Parol tiklangach lockout bekor qilinadi.
         await userManager.SetLockoutEndDateAsync(user, null);
         await userManager.ResetAccessFailedCountAsync(user);
@@ -150,9 +163,13 @@ internal sealed class IdentityService(
     {
         var user = await GetRequiredAsync(userId);
 
+        // ChangePasswordAsync security stamp'ni ham yangilaydi.
         var result = await userManager.ChangePasswordAsync(user, currentPassword, newPassword);
         if (result.Succeeded)
+        {
+            await sessionValidator.InvalidateAsync(user.Id, cancellationToken);
             return Result.Success();
+        }
 
         if (result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.PasswordMismatch)))
         {
@@ -174,8 +191,16 @@ internal sealed class IdentityService(
         user.BlockedAt = blocked ? timeProvider.GetUtcNow() : null;
 
         // Security stamp yangilanadi va o'zgarishlar shu bilan saqlanadi.
-        var result = await userManager.UpdateSecurityStampAsync(user);
-        return result.Succeeded ? Result.Success() : throw new InvalidOperationException(Describe(result));
+        return await UpdateSecurityStampAsync(user, cancellationToken);
+    }
+
+    public async Task<Result> InvalidateSessionsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            return AuthErrors.UserNotFound;
+
+        return await UpdateSecurityStampAsync(user, cancellationToken);
     }
 
     public async Task<Result> AddToRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default)
@@ -189,7 +214,11 @@ internal sealed class IdentityService(
             return Result.Success();
 
         var result = await userManager.AddToRoleAsync(user, role);
-        return result.Succeeded ? Result.Success() : throw new InvalidOperationException(Describe(result));
+        if (!result.Succeeded)
+            throw new InvalidOperationException(Describe(result));
+
+        // Identity rol o'zgarishida stamp'ni yangilamaydi — token'dagi rollar eskirgani uchun qo'lda yangilanadi.
+        return await UpdateSecurityStampAsync(user, cancellationToken);
     }
 
     public async Task<Result> RemoveFromRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default)
@@ -201,7 +230,10 @@ internal sealed class IdentityService(
             return Result.Success();
 
         var result = await userManager.RemoveFromRoleAsync(user, role);
-        return result.Succeeded ? Result.Success() : throw new InvalidOperationException(Describe(result));
+        if (!result.Succeeded)
+            throw new InvalidOperationException(Describe(result));
+
+        return await UpdateSecurityStampAsync(user, cancellationToken);
     }
 
     public Task<int> CountUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
@@ -256,6 +288,22 @@ internal sealed class IdentityService(
 
     // ---------- Yordamchi metodlar ----------
 
+    private async Task<ApplicationUser?> FindApplicationUserAsync(string emailOrUserName) =>
+        emailOrUserName.Contains('@', StringComparison.Ordinal)
+            ? await userManager.FindByEmailAsync(emailOrUserName)
+            : await userManager.FindByNameAsync(emailOrUserName);
+
+    /// <summary>Stamp'ni yangilaydi (o'zgarishlar shu bilan saqlanadi) va sessiya keshini tozalaydi.</summary>
+    private async Task<Result> UpdateSecurityStampAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        var result = await userManager.UpdateSecurityStampAsync(user);
+        if (!result.Succeeded)
+            throw new InvalidOperationException(Describe(result));
+
+        await sessionValidator.InvalidateAsync(user.Id, cancellationToken);
+        return Result.Success();
+    }
+
     private async Task<ApplicationUser> GetRequiredAsync(Guid userId) =>
         await userManager.FindByIdAsync(userId.ToString())
         ?? throw new InvalidOperationException($"User '{userId}' was not found.");
@@ -283,7 +331,7 @@ internal sealed class IdentityService(
         permissions.Sort(StringComparer.Ordinal);
 
         return new AuthUser(user.Id, user.Email ?? string.Empty, user.UserName ?? string.Empty, user.EmailConfirmed,
-            user.IsBlocked, roles, permissions);
+            user.IsBlocked, roles, permissions, SessionVersions.From(user.SecurityStamp));
     }
 
     private async Task<List<UserSummary>> ToSummariesAsync(List<ApplicationUser> users, CancellationToken cancellationToken)
