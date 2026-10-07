@@ -1,0 +1,19 @@
+{
+  "Media.NotFound": "Медиа файл топилмади.",
+  "Media.InvalidOwner": "Медиа файл эгаси кўрсатилиши шарт.",
+  "Media.FileNameRequired": "Файл номи кўрсатилиши шарт.",
+  "Media.ContentTypeInvalid": "Файл тури нотўғри.",
+  "Media.StorageKeyInvalid": "Сақлаш калити нотўғри.",
+  "Media.SizeInvalid": "Файл ҳажми нолдан катта бўлиши керак.",
+  "Media.DimensionsInvalid": "Расм эни ва бўйи мусбат сон бўлиши керак.",
+  "Media.VariantInvalid": "Расм варианти нотўғри.",
+  "Media.AltTextTooLong": "Alt матн {0} белгидан ошмаслиги керак.",
+  "Media.CaptionTooLong": "Изоҳ {0} белгидан ошмаслиги керак.",
+  "Media.UnsupportedFileType": "Бу файл тури қўллаб-қувватланмайди. Рухсат этилган: JPEG, PNG, WebP, GIF.",
+  "Media.FileTooLarge": "Файл ҳажми {0} байтдан ошмаслиги керак.",
+  "Media.FileRequired": "Юклаш учун файл танланг.",
+  "Media.FileContentMismatch": "Файл мазмуни унинг турига мос эмас. Файл бузилган ёки бошқа тур сифатида яширилган бўлиши мумкин.",
+  "Media.InvalidImage": "Файл яроқли расм эмас.",
+  "Media.ImageTooLarge": "Расм ўлчамлари жуда катта.",
+  "Media.InUse": "Бу файл пост, профил ёки категорияда ишлатилмоқда, уни ўчириб бўлмайди."
+}

@@ -138,4 +138,9 @@ public static class MediaErrors
 
     public static readonly Error UnsupportedFileType = Error.Validation("Media.UnsupportedFileType", "File type is not supported.");
     public static readonly Error FileTooLarge = Error.Validation("Media.FileTooLarge", "File size must not exceed {0} bytes.");
+    public static readonly Error FileRequired = Error.Validation("Media.FileRequired", "A file is required.");
+    public static readonly Error FileContentMismatch = Error.Validation("Media.FileContentMismatch", "File content does not match its declared type.");
+    public static readonly Error InvalidImage = Error.Validation("Media.InvalidImage", "The file is not a valid image.");
+    public static readonly Error ImageTooLarge = Error.Validation("Media.ImageTooLarge", "Image dimensions are too large.");
+    public static readonly Error InUse = Error.Conflict("Media.InUse", "Media file is in use and cannot be deleted.");
 }

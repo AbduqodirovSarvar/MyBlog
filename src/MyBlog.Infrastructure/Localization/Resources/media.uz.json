@@ -1,0 +1,19 @@
+{
+  "Media.NotFound": "Media fayl topilmadi.",
+  "Media.InvalidOwner": "Media fayl egasi ko'rsatilishi shart.",
+  "Media.FileNameRequired": "Fayl nomi ko'rsatilishi shart.",
+  "Media.ContentTypeInvalid": "Fayl turi noto'g'ri.",
+  "Media.StorageKeyInvalid": "Saqlash kaliti noto'g'ri.",
+  "Media.SizeInvalid": "Fayl hajmi noldan katta bo'lishi kerak.",
+  "Media.DimensionsInvalid": "Rasm eni va bo'yi musbat son bo'lishi kerak.",
+  "Media.VariantInvalid": "Rasm varianti noto'g'ri.",
+  "Media.AltTextTooLong": "Alt matn {0} belgidan oshmasligi kerak.",
+  "Media.CaptionTooLong": "Izoh {0} belgidan oshmasligi kerak.",
+  "Media.UnsupportedFileType": "Bu fayl turi qo'llab-quvvatlanmaydi. Ruxsat etilgan: JPEG, PNG, WebP, GIF.",
+  "Media.FileTooLarge": "Fayl hajmi {0} baytdan oshmasligi kerak.",
+  "Media.FileRequired": "Yuklash uchun fayl tanlang.",
+  "Media.FileContentMismatch": "Fayl mazmuni uning turiga mos emas. Fayl buzilgan yoki boshqa tur sifatida yashirilgan bo'lishi mumkin.",
+  "Media.InvalidImage": "Fayl yaroqli rasm emas.",
+  "Media.ImageTooLarge": "Rasm o'lchamlari juda katta.",
+  "Media.InUse": "Bu fayl post, profil yoki kategoriyada ishlatilmoqda, uni o'chirib bo'lmaydi."
+}
