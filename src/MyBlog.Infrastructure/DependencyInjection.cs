@@ -83,7 +83,7 @@ public static class DependencyInjection
                     .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>())
-                .AddInterceptors(sp.GetRequiredService<TransactionalEmailQueue>());
+                .AddInterceptors(sp.GetRequiredService<OutboxEmailQueue>());
 
             if (environment.IsDevelopment())
                 options.EnableDetailedErrors();
@@ -152,10 +152,12 @@ public static class DependencyInjection
 
         services.AddValidatedOptions<SmtpOptions>(SmtpOptions.SectionName);
         services.AddScoped<IEmailSender, SmtpEmailSender>();
-        services.AddSingleton<ChannelEmailQueue>();
-        // Xatlar tranzaksiya commit bo'lgandan keyingina navbatga tushadi (TransactionalEmailQueue).
-        services.AddScoped<TransactionalEmailQueue>();
-        services.AddScoped<IEmailQueue>(sp => sp.GetRequiredService<TransactionalEmailQueue>());
+        // Transactional outbox: xat email_outbox jadvaliga ochiq tranzaksiya bilan birga yoziladi (OutboxEmailQueue).
+        services.AddValidatedOptions<EmailOutboxOptions>(EmailOutboxOptions.SectionName);
+        services.AddSingleton<EmailOutboxSignal>();
+        services.AddSingleton<EmailOutboxProcessor>();
+        services.AddScoped<OutboxEmailQueue>();
+        services.AddScoped<IEmailQueue>(sp => sp.GetRequiredService<OutboxEmailQueue>());
         services.AddSingleton<IEmailTemplateRenderer, EmbeddedEmailTemplateRenderer>();
 
         return services;
@@ -165,7 +167,7 @@ public static class DependencyInjection
     {
         services.AddValidatedOptions<BackgroundJobsOptions>(BackgroundJobsOptions.SectionName);
         services.AddHostedService<RecurringJobRunner>();
-        services.AddHostedService<EmailDispatcherHostedService>();
+        services.AddHostedService<EmailOutboxDispatcher>();
         return services;
     }
 
