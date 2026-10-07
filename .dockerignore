@@ -3,9 +3,8 @@
 **/.vs/
 **/.idea/
 **/*.user
-.git/
-.claude/
-.config/
+# Barcha yashirin fayl/papkalar (.git, IDE va tool sozlamalari)
+.*
 tests/
 src/MyBlog.Api/storage/
 **/appsettings.*.local.json

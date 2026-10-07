@@ -481,8 +481,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# Claude Code worktrees
-.claude/worktrees/
 
 # Lokal media fayllari (LocalFileStorage)
 src/MyBlog.Api/storage/
