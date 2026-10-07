@@ -1,0 +1,23 @@
+{
+  "Comment.NotFound": "Изоҳ топилмади.",
+  "Comment.InvalidPost": "Пост кўрсатилиши шарт.",
+  "Comment.InvalidAuthor": "Изоҳ муаллифи кўрсатилиши шарт.",
+  "Comment.ContentRequired": "Изоҳ матнини киритинг.",
+  "Comment.ContentTooLong": "Изоҳ {0} белгидан ошмаслиги керак.",
+  "Comment.MaxDepthExceeded": "Жавоблар {0} даражадан чуқур бўлиши мумкин эмас.",
+  "Comment.ParentNotFound": "Жавоб берилаётган изоҳ топилмади.",
+  "Comment.ParentFromAnotherPost": "Жавоб берилаётган изоҳ бошқа постга тегишли.",
+  "Comment.ParentDeleted": "Ўчирилган изоҳга жавоб бериб бўлмайди.",
+  "Comment.Deleted": "Изоҳ ўчирилган.",
+  "Comment.NotAuthor": "Изоҳни фақат унинг муаллифи ўзгартира олади.",
+  "Comment.PostNotFound": "Пост топилмади ёки нашр қилинмаган.",
+  "Comment.CommentsDisabled": "Бу пост учун изоҳлар ўчирилган.",
+  "Comment.EditWindowExpired": "Изоҳни фақат ёзилганидан кейин {0} дақиқа ичида таҳрирлаш мумкин.",
+  "Comment.DeleteForbidden": "Бу изоҳни ўчиришга рухсатингиз йўқ.",
+  "Reaction.NotFound": "Реакция топилмади.",
+  "Reaction.InvalidUser": "Фойдаланувчи кўрсатилиши шарт.",
+  "Reaction.InvalidTarget": "Реакция объекти нотўғри.",
+  "Reaction.InvalidType": "Реакция тури нотўғри.",
+  "Reaction.TargetNotFound": "Реакция билдирилаётган пост ёки изоҳ топилмади.",
+  "Reaction.ConcurrentUpdate": "Реакция бир вақтда ўзгартирилди. Қайта уриниб кўринг."
+}

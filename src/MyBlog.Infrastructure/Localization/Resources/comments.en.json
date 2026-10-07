@@ -1,0 +1,23 @@
+{
+  "Comment.NotFound": "Comment was not found.",
+  "Comment.InvalidPost": "Post is required.",
+  "Comment.InvalidAuthor": "Comment author is required.",
+  "Comment.ContentRequired": "Please enter the comment text.",
+  "Comment.ContentTooLong": "Comment must not exceed {0} characters.",
+  "Comment.MaxDepthExceeded": "Replies cannot be nested deeper than {0} levels.",
+  "Comment.ParentNotFound": "The comment you are replying to was not found.",
+  "Comment.ParentFromAnotherPost": "The comment you are replying to belongs to another post.",
+  "Comment.ParentDeleted": "Cannot reply to a deleted comment.",
+  "Comment.Deleted": "Comment has been deleted.",
+  "Comment.NotAuthor": "Only the author can modify this comment.",
+  "Comment.PostNotFound": "Post was not found or is not published.",
+  "Comment.CommentsDisabled": "Comments are disabled for this post.",
+  "Comment.EditWindowExpired": "Comments can only be edited within {0} minutes after posting.",
+  "Comment.DeleteForbidden": "You are not allowed to delete this comment.",
+  "Reaction.NotFound": "Reaction was not found.",
+  "Reaction.InvalidUser": "User is required.",
+  "Reaction.InvalidTarget": "Reaction target is not valid.",
+  "Reaction.InvalidType": "Reaction type is not valid.",
+  "Reaction.TargetNotFound": "The post or comment to react to was not found.",
+  "Reaction.ConcurrentUpdate": "The reaction was changed concurrently. Please try again."
+}
