@@ -67,7 +67,7 @@ internal sealed class ProfileApiTestHost : IAsyncDisposable
                 await db.Database.EnsureCreatedAsync();
 
             foreach (var (id, username) in users)
-                db.Set<UserProfile>().Add(UserProfile.Create(id, username).Value);
+                db.AddUserWithProfile(id, username);
             await db.SaveChangesAsync();
         }
 

@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
@@ -98,14 +98,14 @@ internal sealed class CommentsTestHost : IAsyncDisposable
         await using var scope = Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        db.Add(UserProfile.Create(OwnerId, "owner").Value);
-        db.Add(UserProfile.Create(AliceId, "alice").Value);
-        db.Add(UserProfile.Create(BobId, "bob").Value);
+        db.AddUserWithProfile(OwnerId, "owner");
+        db.AddUserWithProfile(AliceId, "alice");
+        db.AddUserWithProfile(BobId, "bob");
         for (var i = 0; i < extraUsers; i++)
         {
             var id = Guid.CreateVersion7();
             ExtraUserIds.Add(id);
-            db.Add(UserProfile.Create(id, $"user{i}").Value);
+            db.AddUserWithProfile(id, $"user{i}");
         }
 
         var post = Post.Create(OwnerId, "Integration post", "integration-post", PostContent.Empty(), 1).Value;

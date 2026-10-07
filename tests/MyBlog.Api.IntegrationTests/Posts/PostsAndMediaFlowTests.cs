@@ -33,7 +33,8 @@ public sealed class PostsAndMediaFlowTests(PostgresFixture postgres) : IAsyncLif
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.EnsureCreatedAsync();
 
-        db.Set<UserProfile>().AddRange(UserProfile.Create(_alice, "alice").Value, UserProfile.Create(_bob, "bob").Value);
+        db.AddUserWithProfile(_alice, "alice");
+        db.AddUserWithProfile(_bob, "bob");
         await db.SaveChangesAsync();
     }
 
