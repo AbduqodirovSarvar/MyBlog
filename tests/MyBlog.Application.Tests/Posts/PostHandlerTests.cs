@@ -219,6 +219,7 @@ public sealed class PostHandlerTests
         published.Value.PublishedAt.ShouldBe(PostsTestContext.Now);
         _ctx.Revisions.Items.ShouldHaveSingleItem().Kind.ShouldBe(RevisionKind.Publish);
         await _ctx.Cache.Received().RemoveByTagAsync(PostCache.Tag(post.Id), Arg.Any<CancellationToken>());
+        _ctx.AuthorCache.InvalidatedUsers.ShouldContain(post.OwnerId);
 
         var again = await _ctx.StatusHandler().Handle(new ChangePostStatusCommand(post.Id, PostStatusAction.Publish), Ct);
         again.Error.ShouldBe(PostErrors.AlreadyPublished);
