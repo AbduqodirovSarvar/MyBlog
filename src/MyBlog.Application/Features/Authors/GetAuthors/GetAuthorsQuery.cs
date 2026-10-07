@@ -1,3 +1,4 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Common.Models;
@@ -15,19 +16,23 @@ public sealed record GetAuthorsQuery(string? Search = null, int Page = 1, int Pa
 internal sealed class GetAuthorsQueryHandler(
     IReadRepository<UserProfile> profiles,
     IContentStatsRepository stats,
-    IMediaUrlResolver mediaUrls) : IQueryHandler<GetAuthorsQuery, PagedList<AuthorSummaryDto>>
+    IMediaUrlResolver mediaUrls,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetAuthorsQuery, PagedList<AuthorSummaryDto>>
 {
     public async Task<Result<PagedList<AuthorSummaryDto>>> Handle(GetAuthorsQuery request,
         CancellationToken cancellationToken)
     {
         var paging = new PageRequest(request.Page, request.PageSize);
 
-        var total = await profiles.CountAsync(new AuthorsSpec(request.Search), cancellationToken);
+        // Yopiq tizim: faqat o'z profili (anonim — Guid.Empty, ya'ni bo'sh ro'yxat).
+        var onlyId = contentPolicy.OwnerScope;
+
+        var total = await profiles.CountAsync(new AuthorsSpec(request.Search, onlyId: onlyId), cancellationToken);
         if (total == 0)
             return PagedList<AuthorSummaryDto>.Empty(paging.SafePage, paging.SafePageSize);
 
         var items = await profiles.ListAsync(
-            new AuthorsSpec(request.Search, paging.SafePage, paging.SafePageSize), cancellationToken);
+            new AuthorsSpec(request.Search, paging.SafePage, paging.SafePageSize, onlyId), cancellationToken);
 
         var counts = await stats.CountPublishedPostsByOwnerAsync(items.Select(i => i.Id).ToList(), cancellationToken);
         var avatars = await mediaUrls.ResolveAsync(items.Select(i => i.AvatarMediaId), publicAccess: true,

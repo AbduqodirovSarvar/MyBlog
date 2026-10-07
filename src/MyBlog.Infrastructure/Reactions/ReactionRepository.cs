@@ -36,6 +36,19 @@ internal sealed class ReactionRepository(AppDbContext dbContext) : EfRepository<
             _ => Task.FromResult(false)
         };
 
+    public Task<Guid?> GetTargetOwnerIdAsync(ReactionTargetType targetType, Guid targetId,
+        CancellationToken cancellationToken = default) =>
+        targetType switch
+        {
+            ReactionTargetType.Post => Posts.Where(p => p.Id == targetId)
+                .Select(p => (Guid?)p.OwnerId)
+                .FirstOrDefaultAsync(cancellationToken),
+            ReactionTargetType.Comment => Comments.Where(c => c.Id == targetId)
+                .Join(Posts, c => c.PostId, p => p.Id, (_, p) => (Guid?)p.OwnerId)
+                .FirstOrDefaultAsync(cancellationToken),
+            _ => Task.FromResult<Guid?>(null)
+        };
+
     public async Task<bool> TryInsertAsync(Reaction reaction, CancellationToken cancellationToken = default)
     {
         Set.Add(reaction);

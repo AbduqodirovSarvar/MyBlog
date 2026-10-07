@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -41,7 +42,8 @@ internal sealed class ListPublicPostsQueryHandler(
     IReadRepository<Tag> tags,
     IReadRepository<MediaFile> media,
     IFileStorage storage,
-    ILocalizer localizer)
+    ILocalizer localizer,
+    IPublicContentPolicy contentPolicy)
     : IQueryHandler<ListPublicPostsQuery, PagedList<PublicPostSummaryDto>>
 {
     private const int MaxSearchLength = 200;
@@ -57,6 +59,14 @@ internal sealed class ListPublicPostsQueryHandler(
             authorId = await profiles.FirstOrDefaultAsync(new AuthorIdByUsernameSpec(username), cancellationToken);
             if (authorId == Guid.Empty)
                 return empty;
+        }
+
+        // Yopiq tizim: faqat joriy foydalanuvchining o'z postlari (anonim — hech narsa).
+        if (contentPolicy.OwnerScope is { } scope)
+        {
+            if (scope == Guid.Empty || (authorId is { } requested && requested != scope))
+                return empty;
+            authorId = scope;
         }
 
         IReadOnlyCollection<Guid>? categoryIds = null;
@@ -158,6 +168,7 @@ internal sealed class GetPublicPostQueryHandler(
     ICacheService cache,
     ICurrentUser currentUser,
     IOptions<PostsOptions> options,
+    IPublicContentPolicy contentPolicy,
     ILogger<GetPublicPostQueryHandler> logger)
     : IQueryHandler<GetPublicPostQuery, PublicPostDetailDto>
 {
@@ -167,7 +178,7 @@ internal sealed class GetPublicPostQueryHandler(
             return PostErrors.NotFound;
 
         var authorId = await profiles.FirstOrDefaultAsync(new AuthorIdByUsernameSpec(request.Username), cancellationToken);
-        if (authorId == Guid.Empty)
+        if (authorId == Guid.Empty || !contentPolicy.CanRead(authorId))
             return PostErrors.NotFound;
 
         var postId = await posts.FirstOrDefaultAsync(new PublishedPostIdSpec(authorId, request.Slug), cancellationToken);

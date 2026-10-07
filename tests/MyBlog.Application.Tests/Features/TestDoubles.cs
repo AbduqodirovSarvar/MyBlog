@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Domain.Common;
@@ -36,6 +37,21 @@ internal sealed class FakeCurrentUser(Guid? id, params string[] permissions) : I
     public bool IsInRole(string role) => false;
 
     public bool HasPermission(string permission) => IsAuthenticated && permissions.Contains(permission);
+}
+
+/// <summary>
+/// <see cref="IPublicContentPolicy"/> test varianti. <see cref="Open"/> — ochiq tizim (default sozlama);
+/// <see cref="ClosedFor"/> — yopiq tizim, faqat berilgan foydalanuvchining kontenti (null — anonim).
+/// </summary>
+internal sealed class FakePublicContentPolicy(Guid? ownerScope) : IPublicContentPolicy
+{
+    public static readonly FakePublicContentPolicy Open = new(null);
+
+    public static FakePublicContentPolicy ClosedFor(Guid? userId) => new(userId ?? Guid.Empty);
+
+    public bool IsPublicReadEnabled => OwnerScope is null;
+
+    public Guid? OwnerScope { get; } = ownerScope;
 }
 
 internal sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider

@@ -1,3 +1,4 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -15,7 +16,8 @@ public sealed record RemoveReactionCommand(ReactionTargetType TargetType, Guid T
 internal sealed class RemoveReactionCommandHandler(
     IReactionRepository reactions,
     IUnitOfWork unitOfWork,
-    ICurrentUser currentUser) : ICommandHandler<RemoveReactionCommand, ReactionSummaryDto>
+    ICurrentUser currentUser,
+    IPublicContentPolicy contentPolicy) : ICommandHandler<RemoveReactionCommand, ReactionSummaryDto>
 {
     public async Task<Result<ReactionSummaryDto>> Handle(RemoveReactionCommand request, CancellationToken cancellationToken)
     {
@@ -23,6 +25,10 @@ internal sealed class RemoveReactionCommandHandler(
 
         if (!Enum.IsDefined(request.TargetType) || request.TargetId == Guid.Empty)
             return ReactionErrors.InvalidTarget;
+
+        if (!await SetReactionCommandHandler.IsTargetReadableAsync(reactions, contentPolicy, request.TargetType,
+                request.TargetId, cancellationToken))
+            return ReactionErrors.TargetNotFound;
 
         return await unitOfWork.ExecuteInTransactionAsync(
             ct => RemoveAsync(userId, request.TargetType, request.TargetId, ct), cancellationToken);

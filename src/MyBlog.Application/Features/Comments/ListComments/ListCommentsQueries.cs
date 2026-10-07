@@ -1,3 +1,4 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Common.Models;
@@ -14,14 +15,18 @@ public sealed record GetMyCommentsQuery(int Page = 1, int PageSize = 20) : IQuer
 public sealed record GetAdminCommentsQuery(string? Search = null, int Page = 1, int PageSize = 20)
     : IQuery<PagedList<CommentListItemDto>>;
 
-internal sealed class GetMyCommentsQueryHandler(ICommentRepository comments, ICurrentUser currentUser)
-    : IQueryHandler<GetMyCommentsQuery, PagedList<CommentListItemDto>>
+internal sealed class GetMyCommentsQueryHandler(
+    ICommentRepository comments,
+    ICurrentUser currentUser,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetMyCommentsQuery, PagedList<CommentListItemDto>>
 {
     public async Task<Result<PagedList<CommentListItemDto>>> Handle(GetMyCommentsQuery request, CancellationToken cancellationToken)
     {
         var paging = new PageRequest(request.Page, request.PageSize);
-        var rows = await comments.ListAsync(new CommentListFilter(AuthorId: currentUser.RequiredId),
-            paging.SafePage, paging.SafePageSize, cancellationToken);
+
+        // Yopiq tizimda boshqalarning postlari (sarlavha, slug, muallif) ko'rsatilmaydi — faqat o'z postlaridagi izohlar.
+        var filter = new CommentListFilter(AuthorId: currentUser.RequiredId, PostOwnerId: contentPolicy.OwnerScope);
+        var rows = await comments.ListAsync(filter, paging.SafePage, paging.SafePageSize, cancellationToken);
 
         return CommentListMapping.Map(rows);
     }

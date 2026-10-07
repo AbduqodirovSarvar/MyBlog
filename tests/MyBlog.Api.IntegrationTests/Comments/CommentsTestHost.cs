@@ -64,7 +64,8 @@ internal sealed class CommentsTestHost : IAsyncDisposable
     public Guid BobId { get; } = Guid.CreateVersion7();
     public List<Guid> ExtraUserIds { get; } = [];
 
-    public static async Task<CommentsTestHost> StartAsync(PostgresFixture postgres, int extraUsers = 0)
+    /// <param name="publicRead">DataIsolation:PublicReadOfPublishedContent (false — yopiq tizim).</param>
+    public static async Task<CommentsTestHost> StartAsync(PostgresFixture postgres, int extraUsers = 0, bool publicRead = true)
     {
         var connectionString = postgres.ConnectionStringFor($"comments_{Guid.NewGuid():N}");
 
@@ -76,7 +77,9 @@ internal sealed class CommentsTestHost : IAsyncDisposable
                 await schema.Database.EnsureCreatedAsync();
         }
 
-        var factory = new ApiFactory(connectionString).WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        var factory = new ApiFactory(connectionString).WithWebHostBuilder(builder => builder
+            .UseSetting("DataIsolation:PublicReadOfPublishedContent", publicRead ? "true" : "false")
+            .ConfigureTestServices(services =>
         {
             services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
             services.PostConfigure<AuthenticationOptions>(o =>

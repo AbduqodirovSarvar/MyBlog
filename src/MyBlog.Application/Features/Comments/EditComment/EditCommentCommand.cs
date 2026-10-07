@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -20,7 +21,8 @@ internal sealed class EditCommentCommandHandler(
     ICurrentUser currentUser,
     IFileStorage fileStorage,
     IOptions<CommentsOptions> options,
-    TimeProvider timeProvider) : ICommandHandler<EditCommentCommand, CommentDto>
+    TimeProvider timeProvider,
+    IPublicContentPolicy contentPolicy) : ICommandHandler<EditCommentCommand, CommentDto>
 {
     public async Task<Result<CommentDto>> Handle(EditCommentCommand request, CancellationToken cancellationToken)
     {
@@ -31,10 +33,14 @@ internal sealed class EditCommentCommandHandler(
         var comment = await comments.GetByIdAsync(request.CommentId, cancellationToken);
         if (comment is null)
             return CommentErrors.NotFound;
+
+        // Yopiq tizimda boshqaning postidagi izoh "mavjud emas" (NotAuthor'dan oldin — mavjudligi oshkor bo'lmasin).
+        var post = await comments.GetPostInfoAsync(comment.PostId, cancellationToken);
+        if (post is not null && !contentPolicy.CanRead(post.OwnerId))
+            return CommentErrors.NotFound;
+
         if (!comment.IsAuthoredBy(userId))
             return CommentErrors.NotAuthor;
-
-        var post = await comments.GetPostInfoAsync(comment.PostId, cancellationToken);
         if (post is null || !post.IsPublic)
             return CommentErrors.PostNotFound;
 

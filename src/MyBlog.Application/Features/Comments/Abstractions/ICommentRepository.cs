@@ -56,7 +56,8 @@ public sealed record CommentListRow(
 
 /// <param name="AuthorId">Berilsa faqat shu muallifning izohlari.</param>
 /// <param name="Search">Matn yoki muallif username'i bo'yicha (ILIKE).</param>
-public sealed record CommentListFilter(Guid? AuthorId = null, string? Search = null);
+/// <param name="PostOwnerId">Berilsa faqat shu foydalanuvchi postlaridagi izohlar.</param>
+public sealed record CommentListFilter(Guid? AuthorId = null, string? Search = null, Guid? PostOwnerId = null);
 
 public interface ICommentRepository : IRepository<Comment>
 {

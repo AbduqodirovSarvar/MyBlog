@@ -9,6 +9,12 @@ namespace MyBlog.Api.Endpoints;
 /// <summary>
 /// Media fayllarini tarqatish: <c>GET /media/{**path}</c> → IFileStorage. Fayl nomlari unikal (guid) va o'zgarmas,
 /// shuning uchun bir yillik immutable kesh va ETag (kalitdan) ishlatiladi. Anonim.
+/// <para>
+/// DataIsolation:PublicReadOfPublishedContent=false bu yerda ataylab qo'llanmaydi: kalitlar taxmin qilib bo'lmaydigan
+/// tasodifiy GUID'lar (capability URL) va ular faqat allaqachon yopilgan endpoint'lar orqali oshkor bo'ladi. Egasini
+/// tekshirish har so'rovda bazadan kalit (va variantlar) bo'yicha qidirishni talab qiladi hamda public/immutable keshni
+/// buzadi. Kerak bo'lsa keyinchalik: signed URL yoki private storage.
+/// </para>
 /// </summary>
 internal static class MediaEndpoints
 {

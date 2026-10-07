@@ -45,11 +45,12 @@ public sealed class CommentQueryTests
         return comment;
     }
 
-    private GetPostCommentsQueryHandler Handler(ICurrentUser user)
+    private GetPostCommentsQueryHandler Handler(ICurrentUser user, IPublicContentPolicy? policy = null)
     {
         var storage = Substitute.For<IFileStorage>();
         storage.GetPublicUrl(Arg.Any<string>()).Returns(ci => "/media/" + ci.Arg<string>());
-        return new(_comments, _reactions, user, storage, Options.Create(new CommentsOptions()), new FixedTimeProvider(Now));
+        return new(_comments, _reactions, user, storage, Options.Create(new CommentsOptions()), new FixedTimeProvider(Now),
+            policy ?? FakePublicContentPolicy.Open);
     }
 
     [Fact]
@@ -130,6 +131,26 @@ public sealed class CommentQueryTests
         var result = await Handler(new FakeCurrentUser(Alice)).Handle(new GetPostCommentsQuery(draft.Id), TestContext.Current.CancellationToken);
 
         result.Error.ShouldBe(CommentErrors.PostNotFound);
+    }
+
+    [Fact]
+    public async Task Closed_system_hides_comments_of_foreign_post_but_owner_still_sees_them()
+    {
+        var root = New(Alice, null, 0);
+        _comments.GetRootPageAsync(default, default, default, default, default)
+            .ReturnsForAnyArgs(new PagedList<Comment>([root], 1, 20, 1));
+        _comments.GetRepliesAsync(default, default!, default).ReturnsForAnyArgs(new List<Comment>());
+
+        var asAlice = await Handler(new FakeCurrentUser(Alice), FakePublicContentPolicy.ClosedFor(Alice))
+            .Handle(new GetPostCommentsQuery(_post.Id), TestContext.Current.CancellationToken);
+        var asAnonymous = await Handler(new FakeCurrentUser(null), FakePublicContentPolicy.ClosedFor(null))
+            .Handle(new GetPostCommentsQuery(_post.Id), TestContext.Current.CancellationToken);
+        var asOwner = await Handler(new FakeCurrentUser(Owner), FakePublicContentPolicy.ClosedFor(Owner))
+            .Handle(new GetPostCommentsQuery(_post.Id), TestContext.Current.CancellationToken);
+
+        asAlice.Error.ShouldBe(CommentErrors.PostNotFound);
+        asAnonymous.Error.ShouldBe(CommentErrors.PostNotFound);
+        asOwner.Value.Items.ShouldHaveSingleItem().Id.ShouldBe(root.Id);
     }
 }
 

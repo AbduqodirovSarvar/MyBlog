@@ -12,9 +12,10 @@ using MyBlog.Application.Features.Tags.Common;
 
 namespace MyBlog.Api.Controllers;
 
-/// <summary>Mualliflar haqida ommaviy ma'lumot (anonim).</summary>
+/// <summary>Mualliflar haqida ommaviy ma'lumot (anonim). Tizim yopiq bo'lsa (PublicReadOfPublishedContent=false) — 404.</summary>
 [Route("api/public/authors")]
 [AllowAnonymous]
+[PublicContent]
 public sealed class AuthorsController(ISender sender) : ApiController(sender)
 {
     [HttpGet]

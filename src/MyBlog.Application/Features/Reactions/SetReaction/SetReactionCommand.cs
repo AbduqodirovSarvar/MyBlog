@@ -1,3 +1,4 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -21,7 +22,8 @@ internal sealed class SetReactionCommandHandler(
     IReactionRepository reactions,
     IUnitOfWork unitOfWork,
     ICurrentUser currentUser,
-    TimeProvider timeProvider) : ICommandHandler<SetReactionCommand, ReactionSummaryDto>
+    TimeProvider timeProvider,
+    IPublicContentPolicy contentPolicy) : ICommandHandler<SetReactionCommand, ReactionSummaryDto>
 {
     internal const int MaxAttempts = 3;
 
@@ -34,7 +36,8 @@ internal sealed class SetReactionCommandHandler(
         if (!Enum.IsDefined(request.Type))
             return ReactionErrors.InvalidType;
 
-        if (!await reactions.IsTargetAvailableAsync(request.TargetType, request.TargetId, cancellationToken))
+        if (!await reactions.IsTargetAvailableAsync(request.TargetType, request.TargetId, cancellationToken)
+            || !await IsTargetReadableAsync(reactions, contentPolicy, request.TargetType, request.TargetId, cancellationToken))
             return ReactionErrors.TargetNotFound;
 
         return await unitOfWork.ExecuteInTransactionAsync(
@@ -95,4 +98,15 @@ internal sealed class SetReactionCommandHandler(
     }
 
     internal static int Delta(ReactionType type, int sign, ReactionType counter) => type == counter ? sign : 0;
+
+    /// <summary>Yopiq tizimda faqat o'z postiga (yoki o'z postidagi izohga) reaksiya; ochiq tizimda qo'shimcha so'rov yo'q.</summary>
+    internal static async Task<bool> IsTargetReadableAsync(IReactionRepository reactions, IPublicContentPolicy contentPolicy,
+        ReactionTargetType targetType, Guid targetId, CancellationToken cancellationToken)
+    {
+        if (contentPolicy.CanReadOthersContent)
+            return true;
+
+        var ownerId = await reactions.GetTargetOwnerIdAsync(targetType, targetId, cancellationToken);
+        return ownerId is { } owner && contentPolicy.CanRead(owner);
+    }
 }

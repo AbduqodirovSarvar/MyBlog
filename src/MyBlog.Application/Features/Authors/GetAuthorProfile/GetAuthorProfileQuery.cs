@@ -1,8 +1,10 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Features.Authors.Abstractions;
 using MyBlog.Application.Features.Authors.Common;
+using MyBlog.Application.Features.Authors.GetAuthorTaxonomy;
 using MyBlog.Application.Features.Profile.Common;
 using MyBlog.Domain.Common;
 using MyBlog.Domain.Users;
@@ -15,12 +17,21 @@ internal sealed class GetAuthorProfileQueryHandler(
     IReadRepository<UserProfile> profiles,
     IContentStatsRepository stats,
     IMediaUrlResolver mediaUrls,
-    ICacheService cache) : IQueryHandler<GetAuthorProfileQuery, AuthorProfileDto>
+    ICacheService cache,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetAuthorProfileQuery, AuthorProfileDto>
 {
     public async Task<Result<AuthorProfileDto>> Handle(GetAuthorProfileQuery request, CancellationToken cancellationToken)
     {
         if (!UserProfile.IsValidUsername(request.Username?.Trim()))
             return UserProfileErrors.NotFound;
+
+        // Yopiq tizim: faqat o'z profili (kesh username bo'yicha, shuning uchun egasi oldindan tekshiriladi).
+        if (!contentPolicy.CanReadOthersContent)
+        {
+            var author = await AuthorLookup.FindAsync(profiles, request.Username, cancellationToken);
+            if (author is null || !contentPolicy.CanRead(author.Id))
+                return UserProfileErrors.NotFound;
+        }
 
         var key = AuthorCacheKeys.Profile(request.Username!);
         var dto = await cache.GetOrCreateAsync(key, ct => LoadAsync(request.Username!, ct), AuthorCacheKeys.Expiration,

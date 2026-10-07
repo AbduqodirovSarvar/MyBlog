@@ -149,6 +149,9 @@ internal sealed class CommentRepository(AppDbContext dbContext) : EfRepository<C
         if (filter.AuthorId is { } authorId)
             query = query.Where(x => x.comment.AuthorId == authorId);
 
+        if (filter.PostOwnerId is { } postOwnerId)
+            query = query.Where(x => x.post.OwnerId == postOwnerId);
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var pattern = $"%{EscapeLike(filter.Search.Trim())}%";

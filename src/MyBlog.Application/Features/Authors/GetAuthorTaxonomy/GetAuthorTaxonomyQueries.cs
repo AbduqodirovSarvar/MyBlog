@@ -1,3 +1,4 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -24,13 +25,14 @@ internal sealed class GetAuthorCategoriesQueryHandler(
     IContentStatsRepository stats,
     IMediaUrlResolver mediaUrls,
     ILocalizer localizer,
-    ICacheService cache) : IQueryHandler<GetAuthorCategoriesQuery, IReadOnlyList<PublicCategoryDto>>
+    ICacheService cache,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetAuthorCategoriesQuery, IReadOnlyList<PublicCategoryDto>>
 {
     public async Task<Result<IReadOnlyList<PublicCategoryDto>>> Handle(GetAuthorCategoriesQuery request,
         CancellationToken cancellationToken)
     {
         var author = await AuthorLookup.FindAsync(profiles, request.Username, cancellationToken);
-        if (author is null)
+        if (author is null || !contentPolicy.CanRead(author.Id))
             return UserProfileErrors.NotFound;
 
         var culture = localizer.CurrentCulture;
@@ -56,13 +58,14 @@ internal sealed class GetAuthorTagsQueryHandler(
     IReadRepository<UserProfile> profiles,
     IReadRepository<Tag> tags,
     IContentStatsRepository stats,
-    ICacheService cache) : IQueryHandler<GetAuthorTagsQuery, IReadOnlyList<PublicTagDto>>
+    ICacheService cache,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetAuthorTagsQuery, IReadOnlyList<PublicTagDto>>
 {
     public async Task<Result<IReadOnlyList<PublicTagDto>>> Handle(GetAuthorTagsQuery request,
         CancellationToken cancellationToken)
     {
         var author = await AuthorLookup.FindAsync(profiles, request.Username, cancellationToken);
-        if (author is null)
+        if (author is null || !contentPolicy.CanRead(author.Id))
             return UserProfileErrors.NotFound;
 
         var list = await cache.GetOrCreateAsync(

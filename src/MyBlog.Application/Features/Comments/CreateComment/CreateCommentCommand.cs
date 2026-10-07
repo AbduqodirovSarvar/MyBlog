@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -24,15 +25,17 @@ internal sealed class CreateCommentCommandHandler(
     ICurrentUser currentUser,
     IFileStorage fileStorage,
     IOptions<CommentsOptions> options,
-    TimeProvider timeProvider) : ICommandHandler<CreateCommentCommand, CommentDto>
+    TimeProvider timeProvider,
+    IPublicContentPolicy contentPolicy) : ICommandHandler<CreateCommentCommand, CommentDto>
 {
     public async Task<Result<CommentDto>> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequiredId;
         var settings = options.Value;
 
+        // Yopiq tizimda faqat o'z postiga izoh yozish mumkin; boshqaning posti "topilmaydi".
         var post = await comments.GetPostInfoAsync(request.PostId, cancellationToken);
-        if (post is null || !post.IsPublic)
+        if (post is null || !post.IsPublic || !contentPolicy.CanRead(post.OwnerId))
             return CommentErrors.PostNotFound;
         if (!post.AllowComments)
             return CommentErrors.CommentsDisabled;

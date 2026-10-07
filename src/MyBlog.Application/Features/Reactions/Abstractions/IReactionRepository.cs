@@ -19,6 +19,13 @@ public interface IReactionRepository : IRepository<Reaction>
     Task<bool> IsTargetAvailableAsync(ReactionTargetType targetType, Guid targetId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Target (post yoki izohning posti) egasi, nashr statusidan qat'i nazar; topilmasa yoki o'chirilgan bo'lsa null.
+    /// Yopiq tizim (PublicReadOfPublishedContent=false) tekshiruvi uchun.
+    /// </summary>
+    Task<Guid?> GetTargetOwnerIdAsync(ReactionTargetType targetType, Guid targetId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Darhol saqlaydi. Unique (user, target) buzilsa false (parallel birinchi reaksiya).</summary>
     Task<bool> TryInsertAsync(Reaction reaction, CancellationToken cancellationToken = default);
 

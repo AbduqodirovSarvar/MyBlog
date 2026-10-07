@@ -41,9 +41,13 @@ internal sealed record AuthorListItem(Guid Id, string Username, string DisplayNa
 /// <summary>Mualliflar ro'yxati (ommaviy): username yoki ism bo'yicha qidiruv.</summary>
 internal sealed class AuthorsSpec : Specification<UserProfile, AuthorListItem>
 {
-    public AuthorsSpec(string? search, int? page = null, int? pageSize = null)
+    /// <param name="onlyId">Berilsa faqat shu profil (yopiq tizimda — joriy foydalanuvchi).</param>
+    public AuthorsSpec(string? search, int? page = null, int? pageSize = null, Guid? onlyId = null)
     {
         IgnoreOwnership();
+
+        if (onlyId is { } id)
+            Where(p => p.Id == id);
 
         if (search?.Trim().ToLowerInvariant() is { Length: > 0 } term)
             Where(p => p.Username.ToLower().Contains(term) || p.DisplayName.ToLower().Contains(term));

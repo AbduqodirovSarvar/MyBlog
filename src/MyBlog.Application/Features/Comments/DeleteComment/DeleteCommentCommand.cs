@@ -1,3 +1,4 @@
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
@@ -17,7 +18,8 @@ public sealed record DeleteCommentCommand(Guid CommentId) : ICommand;
 internal sealed class DeleteCommentCommandHandler(
     ICommentRepository comments,
     IUnitOfWork unitOfWork,
-    ICurrentUser currentUser) : ICommandHandler<DeleteCommentCommand>
+    ICurrentUser currentUser,
+    IPublicContentPolicy contentPolicy) : ICommandHandler<DeleteCommentCommand>
 {
     public async Task<Result> Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
     {
@@ -27,11 +29,15 @@ internal sealed class DeleteCommentCommandHandler(
         if (comment is null)
             return CommentErrors.NotFound;
 
+        var canModerate = CommentRules.CanModerate(currentUser);
+
+        // Yopiq tizimda boshqaning postidagi izoh "mavjud emas". Moderator (admin endpoint ham shu command'ni
+        // ishlatadi) siyosatdan mustasno.
         var post = await comments.GetPostInfoAsync(comment.PostId, cancellationToken);
-        if (post is null)
+        if (post is null || (!canModerate && !contentPolicy.CanRead(post.OwnerId)))
             return CommentErrors.NotFound;
 
-        if (!CommentRules.CanDelete(comment, userId, post.OwnerId, CommentRules.CanModerate(currentUser)))
+        if (!CommentRules.CanDelete(comment, userId, post.OwnerId, canModerate))
             return CommentErrors.DeleteForbidden;
 
         return await unitOfWork.ExecuteInTransactionAsync(async ct =>
