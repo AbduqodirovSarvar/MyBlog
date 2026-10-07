@@ -5,4 +5,7 @@
     <Project Path="src/MyBlog.Domain/MyBlog.Domain.csproj" />
     <Project Path="src/MyBlog.Infrastructure/MyBlog.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MyBlog.Domain.Tests/MyBlog.Domain.Tests.csproj" />
+  </Folder>
 </Solution>
