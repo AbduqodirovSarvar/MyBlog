@@ -4,6 +4,7 @@ using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Features.Posts.Abstractions;
 using MyBlog.Application.Features.Posts.Common;
+using MyBlog.Application.Features.Profile.Common;
 using MyBlog.Domain.Common;
 using MyBlog.Domain.Media;
 using MyBlog.Domain.Posts;
@@ -35,6 +36,7 @@ internal sealed class ChangePostStatusCommandHandler(
     IUnitOfWork unitOfWork,
     IFileStorage storage,
     ICacheService cache,
+    IAuthorCacheInvalidator authorCache,
     IOptions<PostsOptions> options,
     TimeProvider timeProvider)
     : ICommandHandler<ChangePostStatusCommand, PostDto>
@@ -70,6 +72,10 @@ internal sealed class ChangePostStatusCommandHandler(
 
         await cache.RemoveByTagAsync(PostCache.Tag(post.Id), cancellationToken);
 
+        // Muallif sahifasidagi post sonlari (kategoriya/teg daraxtlari) o'zgaradi.
+        if (request.Action is PostStatusAction.Publish or PostStatusAction.Unpublish or PostStatusAction.Archive)
+            await authorCache.InvalidateUserAsync(post.OwnerId, cancellationToken);
+
         return await PostDtoBuilder.BuildAsync(post, postRepository.GetVersion(post),
             new PostDtoSources(tags, media, revisions, storage), cancellationToken);
     }
@@ -87,7 +93,11 @@ internal sealed class ChangePostStatusCommandHandler(
 public sealed record DeletePostCommand(Guid Id) : ICommand;
 
 /// <summary>Soft delete (izohlar/reaksiyalar o'z modullarida PostDeletedDomainEvent orqali qayta ishlanadi).</summary>
-internal sealed class DeletePostCommandHandler(IRepository<Post> posts, IUnitOfWork unitOfWork, ICacheService cache)
+internal sealed class DeletePostCommandHandler(
+    IRepository<Post> posts,
+    IUnitOfWork unitOfWork,
+    ICacheService cache,
+    IAuthorCacheInvalidator authorCache)
     : ICommandHandler<DeletePostCommand>
 {
     public async Task<Result> Handle(DeletePostCommand request, CancellationToken cancellationToken)
@@ -99,6 +109,7 @@ internal sealed class DeletePostCommandHandler(IRepository<Post> posts, IUnitOfW
         posts.Remove(post);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByTagAsync(PostCache.Tag(post.Id), cancellationToken);
+        await authorCache.InvalidateUserAsync(post.OwnerId, cancellationToken);
         return Result.Success();
     }
 }

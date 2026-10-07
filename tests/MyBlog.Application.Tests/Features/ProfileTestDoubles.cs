@@ -22,6 +22,14 @@ internal sealed class FakeAuthorCache : IAuthorCacheInvalidator
         CurrentUserInvalidations++;
         return Task.CompletedTask;
     }
+
+    public List<Guid> InvalidatedUsers { get; } = [];
+
+    public Task InvalidateUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        InvalidatedUsers.Add(userId);
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class FakeMediaUrlResolver : IMediaUrlResolver

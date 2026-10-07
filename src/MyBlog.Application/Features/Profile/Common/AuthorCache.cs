@@ -27,6 +27,9 @@ internal interface IAuthorCacheInvalidator
     Task InvalidateAsync(string username, CancellationToken cancellationToken = default);
 
     Task InvalidateCurrentUserAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>User id bo'yicha (background job'lar kabi joriy user yo'q joylar uchun).</summary>
+    Task InvalidateUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }
 
 internal sealed class AuthorCacheInvalidator(
@@ -37,11 +40,11 @@ internal sealed class AuthorCacheInvalidator(
     public Task InvalidateAsync(string username, CancellationToken cancellationToken = default) =>
         cache.RemoveByTagAsync(AuthorCacheKeys.Tag(username), cancellationToken);
 
-    public async Task InvalidateCurrentUserAsync(CancellationToken cancellationToken = default)
-    {
-        if (currentUser.Id is not { } userId)
-            return;
+    public Task InvalidateCurrentUserAsync(CancellationToken cancellationToken = default) =>
+        currentUser.Id is { } userId ? InvalidateUserAsync(userId, cancellationToken) : Task.CompletedTask;
 
+    public async Task InvalidateUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
         var username = await profiles.FirstOrDefaultAsync(new ProfileUsernameSpec(userId), cancellationToken);
         if (username is not null)
             await InvalidateAsync(username, cancellationToken);

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging.Abstractions;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Common.Models;
 using MyBlog.Application.Features.Posts;
@@ -77,6 +77,7 @@ internal sealed class PostsTestContext
     public ITagResolver TagResolver { get; } = Substitute.For<ITagResolver>();
     public IFileStorage Storage { get; } = Substitute.For<IFileStorage>();
     public ICacheService Cache { get; } = Substitute.For<ICacheService>();
+    public MyBlog.Application.Tests.Features.FakeAuthorCache AuthorCache { get; } = new();
     public PostsOptions Options { get; } = new() { AutosaveKeep = 1, MaxRevisions = 50 };
     public FixedTimeProvider Time { get; } = new(Now);
     public PassThroughContentProcessor Content { get; } = new();
@@ -113,12 +114,12 @@ internal sealed class PostsTestContext
         Microsoft.Extensions.Options.Options.Create(Options), Time);
 
     public ChangePostStatusCommandHandler StatusHandler() => new(Posts, Revisions, PostRepository, Tags, Media, UnitOfWork, Storage,
-        Cache, Microsoft.Extensions.Options.Options.Create(Options), Time);
+        Cache, AuthorCache, Microsoft.Extensions.Options.Options.Create(Options), Time);
 
     public RestorePostRevisionCommandHandler RestoreHandler() => new(Posts, Revisions, PostRepository, Tags, Media, UnitOfWork,
         CurrentUser, Content, Storage, Cache, Microsoft.Extensions.Options.Options.Create(Options), Time);
 
-    public ScheduledPostsPublisherJob PublisherJob() => new(Posts, UnitOfWork, Cache, Microsoft.Extensions.Options.Options.Create(Options),
+    public ScheduledPostsPublisherJob PublisherJob() => new(Posts, UnitOfWork, Cache, AuthorCache, Microsoft.Extensions.Options.Options.Create(Options),
         Time, NullLogger<ScheduledPostsPublisherJob>.Instance);
 
     public static UpdatePostCommand Update(Post post, string title, string html, uint? version = null, string? slug = null) =>

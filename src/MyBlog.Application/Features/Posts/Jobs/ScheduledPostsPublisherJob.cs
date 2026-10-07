@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MyBlog.Application.Abstractions.Persistence;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Features.Posts.Common;
+using MyBlog.Application.Features.Profile.Common;
 using MyBlog.Domain.Posts;
 
 namespace MyBlog.Application.Features.Posts.Jobs;
@@ -12,6 +13,7 @@ internal sealed class ScheduledPostsPublisherJob(
     IRepository<Post> posts,
     IUnitOfWork unitOfWork,
     ICacheService cache,
+    IAuthorCacheInvalidator authorCache,
     IOptions<PostsOptions> options,
     TimeProvider timeProvider,
     ILogger<ScheduledPostsPublisherJob> logger) : IRecurringJob
@@ -33,6 +35,9 @@ internal sealed class ScheduledPostsPublisherJob(
 
         foreach (var post in published)
             await cache.RemoveByTagAsync(PostCache.Tag(post.Id), cancellationToken);
+
+        foreach (var ownerId in published.Select(p => p.OwnerId).Distinct())
+            await authorCache.InvalidateUserAsync(ownerId, cancellationToken);
 
         logger.LogInformation("Published {Count} scheduled posts", published.Count);
     }
