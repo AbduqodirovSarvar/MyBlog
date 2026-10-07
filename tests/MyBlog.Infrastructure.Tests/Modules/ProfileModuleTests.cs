@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MyBlog.Application;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Features.Authors.Abstractions;
@@ -13,6 +14,7 @@ using MyBlog.Application.Features.Profile.Common;
 using MyBlog.Application.Features.Profile.Skills;
 using MyBlog.Application.Features.Tags.Abstractions;
 using MyBlog.Domain.Common;
+using MyBlog.Infrastructure.DataIsolation;
 using MyBlog.Infrastructure.Persistence.Repositories;
 using NSubstitute;
 
@@ -48,6 +50,7 @@ public sealed class ProfileModuleTests
         var sp = scope.ServiceProvider;
 
         sp.GetRequiredService<ITagResolver>().ShouldNotBeNull();
+        sp.GetRequiredService<IPublicContentPolicy>().ShouldBeOfType<PublicContentPolicy>();
         sp.GetRequiredService<IContentStatsRepository>().ShouldBeOfType<ContentStatsRepository>();
         sp.GetRequiredService<IRequestHandler<CreateCategoryCommand, Result<CategoryDto>>>().ShouldNotBeNull();
         sp.GetRequiredService<IRequestHandler<AddSkillCommand, Result<SkillDto>>>().ShouldNotBeNull();

@@ -28,11 +28,56 @@ public sealed class ReactionCommandTests
         _reactions.TryDeleteAsync(default, default, default).ReturnsForAnyArgs(true);
     }
 
+    private IPublicContentPolicy _policy = FakePublicContentPolicy.Open;
+
     private SetReactionCommandHandler SetHandler() =>
-        new(_reactions, _unitOfWork, new FakeCurrentUser(User, Permissions.Reactions.Write), new FixedTimeProvider(Now));
+        new(_reactions, _unitOfWork, new FakeCurrentUser(User, Permissions.Reactions.Write), new FixedTimeProvider(Now), _policy);
 
     private RemoveReactionCommandHandler RemoveHandler() =>
-        new(_reactions, _unitOfWork, new FakeCurrentUser(User, Permissions.Reactions.Write));
+        new(_reactions, _unitOfWork, new FakeCurrentUser(User, Permissions.Reactions.Write), _policy);
+
+    [Fact]
+    public async Task Open_system_does_not_look_up_target_owner()
+    {
+        FindReturns((Reaction?)null);
+
+        (await SetHandler().Handle(new SetReactionCommand(ReactionTargetType.Post, Target, ReactionType.Like),
+            TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
+
+        await _reactions.DidNotReceiveWithAnyArgs().GetTargetOwnerIdAsync(default, default, default);
+    }
+
+    [Theory]
+    [InlineData(ReactionTargetType.Post)]
+    [InlineData(ReactionTargetType.Comment)]
+    public async Task Closed_system_reaction_on_foreign_target_is_not_found(ReactionTargetType targetType)
+    {
+        _policy = FakePublicContentPolicy.ClosedFor(User);
+        _reactions.GetTargetOwnerIdAsync(targetType, Target, Arg.Any<CancellationToken>()).Returns(Guid.CreateVersion7());
+
+        var set = await SetHandler().Handle(new SetReactionCommand(targetType, Target, ReactionType.Like),
+            TestContext.Current.CancellationToken);
+        var remove = await RemoveHandler().Handle(new RemoveReactionCommand(targetType, Target),
+            TestContext.Current.CancellationToken);
+
+        set.Error.ShouldBe(ReactionErrors.TargetNotFound);
+        remove.Error.ShouldBe(ReactionErrors.TargetNotFound);
+        _unitOfWork.TransactionCalls.ShouldBe(0);
+        await _reactions.DidNotReceiveWithAnyArgs().TryInsertAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task Closed_system_reaction_on_own_post_is_allowed()
+    {
+        _policy = FakePublicContentPolicy.ClosedFor(User);
+        _reactions.GetTargetOwnerIdAsync(ReactionTargetType.Post, Target, Arg.Any<CancellationToken>()).Returns(User);
+        FindReturns((Reaction?)null);
+
+        var result = await SetHandler().Handle(new SetReactionCommand(ReactionTargetType.Post, Target, ReactionType.Like),
+            TestContext.Current.CancellationToken);
+
+        result.Value.ShouldBe(new(5, 2, "Like"));
+    }
 
     private static Reaction Existing(ReactionType type, ReactionTargetType targetType = ReactionTargetType.Post) =>
         Reaction.Create(User, targetType, Target, type, Now.AddDays(-1)).Value;

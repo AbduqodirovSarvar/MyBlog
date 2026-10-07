@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Features.Comments.Abstractions;
@@ -19,7 +20,8 @@ internal sealed class GetCommentQueryHandler(
     ICurrentUser currentUser,
     IFileStorage fileStorage,
     IOptions<CommentsOptions> options,
-    TimeProvider timeProvider) : IQueryHandler<GetCommentQuery, CommentDto>
+    TimeProvider timeProvider,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetCommentQuery, CommentDto>
 {
     public async Task<Result<CommentDto>> Handle(GetCommentQuery request, CancellationToken cancellationToken)
     {
@@ -28,7 +30,7 @@ internal sealed class GetCommentQueryHandler(
             return CommentErrors.NotFound;
 
         var post = await comments.GetPostInfoAsync(comment.PostId, cancellationToken);
-        if (!GetPostCommentsQueryHandler.CanView(post, currentUser))
+        if (!GetPostCommentsQueryHandler.CanView(post, currentUser, contentPolicy))
             return CommentErrors.NotFound;
 
         var view = await CommentView.LoadAsync(post!, [comment], comments, reactions, currentUser, fileStorage,

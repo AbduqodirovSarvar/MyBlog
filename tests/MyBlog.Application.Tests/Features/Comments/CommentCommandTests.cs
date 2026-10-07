@@ -43,16 +43,21 @@ public sealed class CommentCommandTests
     private static CommentPostInfo Post(PostStatus status = PostStatus.Published, bool allowComments = true, bool deleted = false) =>
         new(Guid.CreateVersion7(), PostOwner, "owner", "Title", "title", status, allowComments, deleted, 0);
 
+    /// <summary>Yopiq tizim (PublicReadOfPublishedContent=false) — har bir handler joriy foydalanuvchi bo'yicha.</summary>
+    private bool _closed;
+
+    private IPublicContentPolicy Policy(Guid? user) => _closed ? FakePublicContentPolicy.ClosedFor(user) : FakePublicContentPolicy.Open;
+
     private CreateCommentCommandHandler CreateHandler(Guid? user) =>
         new(_comments, _reactions, _unitOfWork, new FakeCurrentUser(user, Permissions.Comments.Write),
-            Substitute.For<IFileStorage>(), Options.Create(_options), new FixedTimeProvider(Now));
+            Substitute.For<IFileStorage>(), Options.Create(_options), new FixedTimeProvider(Now), Policy(user));
 
     private EditCommentCommandHandler EditHandler(Guid user) =>
         new(_comments, _reactions, _unitOfWork, new FakeCurrentUser(user, Permissions.Comments.Write),
-            Substitute.For<IFileStorage>(), Options.Create(_options), new FixedTimeProvider(Now));
+            Substitute.For<IFileStorage>(), Options.Create(_options), new FixedTimeProvider(Now), Policy(user));
 
     private DeleteCommentCommandHandler DeleteHandler(Guid user, params string[] permissions) =>
-        new(_comments, _unitOfWork, new FakeCurrentUser(user, permissions));
+        new(_comments, _unitOfWork, new FakeCurrentUser(user, permissions), Policy(user));
 
     private Comment ExistingComment(Guid author, Comment? parent = null)
     {
@@ -266,5 +271,52 @@ public sealed class CommentCommandTests
         result.Error.ShouldBe(CommentErrors.DeleteForbidden);
         _comments.DidNotReceive().Remove(Arg.Any<Comment>());
         await _comments.DidNotReceive().AdjustPostCommentCountAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    // ---------- Yopiq tizim (PublicReadOfPublishedContent=false) ----------
+
+    [Fact]
+    public async Task Closed_system_create_on_foreign_post_is_not_found_but_owner_can_comment()
+    {
+        _closed = true;
+
+        var foreign = await CreateHandler(Alice).Handle(new CreateCommentCommand(_post.Id, "Salom"), TestContext.Current.CancellationToken);
+        var own = await CreateHandler(PostOwner).Handle(new CreateCommentCommand(_post.Id, "Salom"), TestContext.Current.CancellationToken);
+
+        foreign.Error.ShouldBe(CommentErrors.PostNotFound);
+        own.IsSuccess.ShouldBeTrue();
+        _comments.Received(1).Add(Arg.Is<Comment>(c => c.AuthorId == PostOwner));
+    }
+
+    [Fact]
+    public async Task Closed_system_edit_and_delete_of_comment_on_foreign_post_is_not_found()
+    {
+        _closed = true;
+        var own = ExistingComment(Alice);
+        var others = ExistingComment(Bob);
+
+        (await EditHandler(Alice).Handle(new EditCommentCommand(own.Id, "Yangi"), TestContext.Current.CancellationToken))
+            .Error.ShouldBe(CommentErrors.NotFound);
+        // NotAuthor (403) emas — izoh mavjudligi oshkor bo'lmaydi.
+        (await EditHandler(Alice).Handle(new EditCommentCommand(others.Id, "Yangi"), TestContext.Current.CancellationToken))
+            .Error.ShouldBe(CommentErrors.NotFound);
+        (await DeleteHandler(Alice).Handle(new DeleteCommentCommand(own.Id), TestContext.Current.CancellationToken))
+            .Error.ShouldBe(CommentErrors.NotFound);
+
+        _comments.DidNotReceive().Remove(Arg.Any<Comment>());
+        _unitOfWork.SaveChangesCalls.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Closed_system_post_owner_and_moderator_can_still_delete()
+    {
+        _closed = true;
+        var first = ExistingComment(Alice);
+        var second = ExistingComment(Bob);
+
+        (await DeleteHandler(PostOwner).Handle(new DeleteCommentCommand(first.Id), TestContext.Current.CancellationToken))
+            .IsSuccess.ShouldBeTrue();
+        (await DeleteHandler(Guid.CreateVersion7(), Permissions.Comments.Moderate)
+            .Handle(new DeleteCommentCommand(second.Id), TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
     }
 }

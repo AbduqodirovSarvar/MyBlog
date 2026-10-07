@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MyBlog.Application.Abstractions.Authorization;
 using MyBlog.Application.Abstractions.Messaging;
 using MyBlog.Application.Abstractions.Services;
 using MyBlog.Application.Common.Models;
@@ -24,12 +25,13 @@ internal sealed class GetPostCommentsQueryHandler(
     ICurrentUser currentUser,
     IFileStorage fileStorage,
     IOptions<CommentsOptions> options,
-    TimeProvider timeProvider) : IQueryHandler<GetPostCommentsQuery, PagedList<CommentDto>>
+    TimeProvider timeProvider,
+    IPublicContentPolicy contentPolicy) : IQueryHandler<GetPostCommentsQuery, PagedList<CommentDto>>
 {
     public async Task<Result<PagedList<CommentDto>>> Handle(GetPostCommentsQuery request, CancellationToken cancellationToken)
     {
         var post = await comments.GetPostInfoAsync(request.PostId, cancellationToken);
-        if (!CanView(post, currentUser))
+        if (!CanView(post, currentUser, contentPolicy))
             return CommentErrors.PostNotFound;
 
         var paging = new PageRequest(request.Page, request.PageSize);
@@ -47,8 +49,12 @@ internal sealed class GetPostCommentsQueryHandler(
         return new PagedList<CommentDto>(view.BuildTree(roots.Items, replies), roots.Page, roots.PageSize, roots.TotalCount);
     }
 
-    /// <summary>Ommaviy post — hamma uchun; nashr qilinmagan — faqat egasi va moderator uchun.</summary>
-    internal static bool CanView(CommentPostInfo? post, ICurrentUser currentUser) =>
+    /// <summary>
+    /// Ommaviy post — hamma uchun; nashr qilinmagan — faqat egasi va moderator uchun.
+    /// Yopiq tizimda (PublicReadOfPublishedContent=false) boshqaning posti umuman ko'rinmaydi.
+    /// </summary>
+    internal static bool CanView(CommentPostInfo? post, ICurrentUser currentUser, IPublicContentPolicy contentPolicy) =>
         post is { IsDeleted: false }
+        && contentPolicy.CanRead(post.OwnerId)
         && (post.IsPublic || post.OwnerId == currentUser.Id || CommentRules.CanModerate(currentUser));
 }

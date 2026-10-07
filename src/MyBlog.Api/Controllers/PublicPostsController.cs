@@ -9,8 +9,9 @@ using MyBlog.Application.Features.Posts.Public;
 
 namespace MyBlog.Api.Controllers;
 
-/// <summary>Nashr qilingan postlar (anonim).</summary>
+/// <summary>Nashr qilingan postlar (anonim). Tizim yopiq bo'lsa (PublicReadOfPublishedContent=false) — 404.</summary>
 [AllowAnonymous]
+[PublicContent]
 public sealed class PublicPostsController(ISender sender) : ApiController(sender)
 {
     /// <param name="author">Muallif username'i.</param>
