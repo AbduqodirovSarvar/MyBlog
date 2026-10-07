@@ -1,0 +1,23 @@
+{
+  "Comment.NotFound": "Комментарий не найден.",
+  "Comment.InvalidPost": "Необходимо указать пост.",
+  "Comment.InvalidAuthor": "Необходимо указать автора комментария.",
+  "Comment.ContentRequired": "Введите текст комментария.",
+  "Comment.ContentTooLong": "Комментарий не должен превышать {0} символов.",
+  "Comment.MaxDepthExceeded": "Ответы не могут быть вложены глубже {0} уровней.",
+  "Comment.ParentNotFound": "Комментарий, на который вы отвечаете, не найден.",
+  "Comment.ParentFromAnotherPost": "Комментарий, на который вы отвечаете, относится к другому посту.",
+  "Comment.ParentDeleted": "Нельзя ответить на удалённый комментарий.",
+  "Comment.Deleted": "Комментарий удалён.",
+  "Comment.NotAuthor": "Изменять комментарий может только его автор.",
+  "Comment.PostNotFound": "Пост не найден или не опубликован.",
+  "Comment.CommentsDisabled": "Комментарии к этому посту отключены.",
+  "Comment.EditWindowExpired": "Комментарий можно редактировать только в течение {0} минут после публикации.",
+  "Comment.DeleteForbidden": "У вас нет прав на удаление этого комментария.",
+  "Reaction.NotFound": "Реакция не найдена.",
+  "Reaction.InvalidUser": "Необходимо указать пользователя.",
+  "Reaction.InvalidTarget": "Недопустимый объект реакции.",
+  "Reaction.InvalidType": "Недопустимый тип реакции.",
+  "Reaction.TargetNotFound": "Пост или комментарий для реакции не найден.",
+  "Reaction.ConcurrentUpdate": "Реакция была изменена одновременно. Попробуйте ещё раз."
+}

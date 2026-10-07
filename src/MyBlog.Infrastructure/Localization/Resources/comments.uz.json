@@ -1,0 +1,23 @@
+{
+  "Comment.NotFound": "Izoh topilmadi.",
+  "Comment.InvalidPost": "Post ko'rsatilishi shart.",
+  "Comment.InvalidAuthor": "Izoh muallifi ko'rsatilishi shart.",
+  "Comment.ContentRequired": "Izoh matnini kiriting.",
+  "Comment.ContentTooLong": "Izoh {0} belgidan oshmasligi kerak.",
+  "Comment.MaxDepthExceeded": "Javoblar {0} darajadan chuqur bo'lishi mumkin emas.",
+  "Comment.ParentNotFound": "Javob berilayotgan izoh topilmadi.",
+  "Comment.ParentFromAnotherPost": "Javob berilayotgan izoh boshqa postga tegishli.",
+  "Comment.ParentDeleted": "O'chirilgan izohga javob berib bo'lmaydi.",
+  "Comment.Deleted": "Izoh o'chirilgan.",
+  "Comment.NotAuthor": "Izohni faqat uning muallifi o'zgartira oladi.",
+  "Comment.PostNotFound": "Post topilmadi yoki nashr qilinmagan.",
+  "Comment.CommentsDisabled": "Bu post uchun izohlar o'chirilgan.",
+  "Comment.EditWindowExpired": "Izohni faqat yozilganidan keyin {0} daqiqa ichida tahrirlash mumkin.",
+  "Comment.DeleteForbidden": "Bu izohni o'chirishga ruxsatingiz yo'q.",
+  "Reaction.NotFound": "Reaksiya topilmadi.",
+  "Reaction.InvalidUser": "Foydalanuvchi ko'rsatilishi shart.",
+  "Reaction.InvalidTarget": "Reaksiya obyekti noto'g'ri.",
+  "Reaction.InvalidType": "Reaksiya turi noto'g'ri.",
+  "Reaction.TargetNotFound": "Reaksiya bildirilayotgan post yoki izoh topilmadi.",
+  "Reaction.ConcurrentUpdate": "Reaksiya bir vaqtda o'zgartirildi. Qayta urinib ko'ring."
+}

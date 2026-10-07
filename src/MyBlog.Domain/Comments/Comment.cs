@@ -131,4 +131,11 @@ public static class CommentErrors
     public static readonly Error ParentDeleted = Error.Conflict("Comment.ParentDeleted", "Cannot reply to a deleted comment.");
     public static readonly Error Deleted = Error.Conflict("Comment.Deleted", "Comment has been deleted.");
     public static readonly Error NotAuthor = Error.Forbidden("Comment.NotAuthor", "Only the author can modify this comment.");
+
+    public static readonly Error PostNotFound = Error.NotFound("Comment.PostNotFound", "Post was not found or is not published.");
+    public static readonly Error CommentsDisabled = Error.Forbidden("Comment.CommentsDisabled", "Comments are disabled for this post.");
+
+    public static readonly Error EditWindowExpired = Error.Forbidden("Comment.EditWindowExpired", "Comments can only be edited within {0} minutes.");
+
+    public static readonly Error DeleteForbidden = Error.Forbidden("Comment.DeleteForbidden", "You are not allowed to delete this comment.");
 }

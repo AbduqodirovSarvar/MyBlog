@@ -72,4 +72,5 @@ public static class ReactionErrors
     public static readonly Error InvalidTarget = Error.Validation("Reaction.InvalidTarget", "Reaction target is not valid.");
     public static readonly Error InvalidType = Error.Validation("Reaction.InvalidType", "Reaction type is not valid.");
     public static readonly Error TargetNotFound = Error.NotFound("Reaction.TargetNotFound", "Reaction target was not found.");
+    public static readonly Error ConcurrentUpdate = Error.Conflict("Reaction.ConcurrentUpdate", "The reaction was changed concurrently. Please try again.");
 }
